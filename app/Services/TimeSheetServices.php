@@ -78,6 +78,14 @@ class TimeSheetServices {
             return $this->responseHelper->api_response(null, 422,"error", "This timesheet does not exist.");
         }
     }
+    public function showallTimesheet(){
+        $timesheetData = TimeSheet::with('project')->get();
+        if(!empty($timesheetData)){
+            return $this->responseHelper->api_response($timesheetData, 200,"success", 'Timesheet details.');
+        }else{
+            return $this->responseHelper->api_response(null, 422,"error", "This timesheet does not exist.");
+        }
+    }
     public function deleteTimesheet($id){
         $timesheetData = TimeSheet::where('id', $id)->first();
         if(!empty($timesheetData)){

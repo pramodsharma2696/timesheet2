@@ -46,6 +46,13 @@ class TimeSheetController extends Controller
             return $this->responseHelper->api_response(null, 422,"error", $e->getMessage());
         }
     }
+    public function showAllTimeSheet(){
+        try {
+            $this->timeSheetServices->showallTimesheet();
+        } catch (\Exception $e) {
+            return $this->responseHelper->api_response(null, 422,"error", $e->getMessage());
+        }
+    }
     public function deleteTimeSheet($id){
         try {
             $this->timeSheetServices->deleteTimesheet($id);

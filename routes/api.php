@@ -47,6 +47,7 @@ Route::group(
                 // Timesheet Route
                 Route::post('/create-timesheet',[TimeSheetController::class, 'createTimeSheet']);
                 Route::get('/timesheet-details/{id}',[TimeSheetController::class, 'showTimeSheet'])->where('id', '[0-9]+');
+                Route::get('/all-timesheet',[TimeSheetController::class, 'showAllTimeSheet']);
                 Route::post('/update-timesheet',[TimeSheetController::class, 'updateTimeSheet']);
                 Route::delete('/timesheet-delete/{id}',[TimeSheetController::class, 'deleteTimeSheet'])->where('id', '[0-9]+');
                                 
