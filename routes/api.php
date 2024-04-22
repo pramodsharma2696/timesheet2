@@ -29,7 +29,7 @@ Route::group(
         Route::post('login', 'AuthController@login')->name('user.login');
         Route::get("micro-status", fn () => response()->json(["active"]));
 
-        Route::middleware(['auth:sanctum'])
+        Route::middleware(['auth:sanctum','cors'])
             ->group(function () {
                 Route::apiResource("invoices", "InvoiceController");
                 Route::apiResource("tenders", "CreateTenderController");
