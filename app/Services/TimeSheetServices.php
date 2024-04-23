@@ -30,7 +30,17 @@ class TimeSheetServices {
         $createTimesheet->break = $request['break'];
         $createTimesheet->break_duration = $request['break_duration'];
         $createTimesheet->break_duration_type = $request['break_duration_type'];
-        $createTimesheet->assign_admin = json_encode(explode(',', $request['assign_admin']));
+        $assignAdminData = collect($request['assign_admin'])->map(function ($adminData) {
+            return [
+                'admin_id' => $adminData['admin_id'],
+                'role' => json_encode([
+                    'manage_time' => $adminData['manage_time'],
+                    'manage_worker' => $adminData['manage_worker']
+                ])
+            ];
+        })->toJson();
+
+        $createTimesheet->assign_admin = $assignAdminData;
         $createTimesheet->save();
         $timesheetData = TimeSheet::with('project')->where('id', $createTimesheet->id)->first();
         return $this->responseHelper->api_response($timesheetData, 200,"success", 'Timesheet created.');
@@ -59,7 +69,16 @@ class TimeSheetServices {
                 $timesheetData->break = $request['break'];
                 $timesheetData->break_duration = $request['break_duration'];
                 $timesheetData->break_duration_type = $request['break_duration_type'];
-                $timesheetData->assign_admin = json_encode(explode(',', $request['assign_admin']));
+                $assignAdminData = collect($request['assign_admin'])->map(function ($adminData) {
+                    return [
+                        'admin_id' => $adminData['admin_id'],
+                        'role' => json_encode([
+                            'manage_time' => $adminData['manage_time'],
+                            'manage_worker' => $adminData['manage_worker']
+                        ])
+                    ];
+                })->toJson();        
+                $timesheetData->assign_admin = $assignAdminData;
                 $timesheetData->save();
                 $timesheetData = TimeSheet::with('project')->where('id', $timesheetData->id)->first();
                 return $this->responseHelper->api_response($timesheetData, 200,"success", 'Timesheet updated.');
@@ -79,7 +98,7 @@ class TimeSheetServices {
         }
     }
     public function showallTimesheet(){
-        $timesheetData = TimeSheet::with('project')->get();
+        $timesheetData = TimeSheet::with('project')->orderBy('created_at', 'desc')->get();
         if(!empty($timesheetData)){
             return $this->responseHelper->api_response($timesheetData, 200,"success", 'Timesheet details.');
         }else{
