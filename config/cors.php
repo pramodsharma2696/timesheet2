@@ -1,6 +1,6 @@
 <?php
 return [
-    'paths' => ['*'],
+    'paths' => ['api/*'],
     'allowed_methods' => ['*'],
     'allowed_origins' => ['http://localhost:4900'], //add your allowed origins
     'allowed_origins_patterns' => [],
