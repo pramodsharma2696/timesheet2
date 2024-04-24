@@ -14,7 +14,11 @@ class TimeSheetServices {
     public function storeTimesheet($request){
         $userid = auth()->user()->id;
         $start_date = date('Y-m-d', strtotime($request['start_date']));
-        $end_date = date('Y-m-d', strtotime($request['end_date']));
+        if(isset($request['end_date']) && !empty($request['end_date'])){
+            $end_date = date('Y-m-d', strtotime($request['end_date']));
+        }else{
+            $end_date = null;
+        }
         if($end_date < $start_date) {
             return $this->responseHelper->api_response(null, 422,"error", "End date must be after the start date");
         }else{
@@ -27,9 +31,11 @@ class TimeSheetServices {
         $createTimesheet->localwork = $request['localwork'];
         $createTimesheet->scanning = $request['scanning'];
         $createTimesheet->hours = $request['hours'];
-        $createTimesheet->break = $request['break'];
-        $createTimesheet->break_duration = $request['break_duration'];
-        $createTimesheet->break_duration_type = $request['break_duration_type'];
+        if(isset($request['break']) && $request['break'] == 1){
+            $createTimesheet->break = $request['break'];
+            $createTimesheet->break_duration = $request['break_duration'];
+            $createTimesheet->break_duration_type = $request['break_duration_type'];
+         }        
         $assignAdminData = collect($request['assign_admin'])->map(function ($adminData) {
             return [
                 'admin_id' => $adminData['admin_id'],
@@ -55,7 +61,11 @@ class TimeSheetServices {
             return $this->responseHelper->api_response(null, 422,"error", "Timesheet does not exist to update.");
         }else{
             $start_date = date('Y-m-d', strtotime($request['start_date']));
-            $end_date = date('Y-m-d', strtotime($request['end_date']));
+                if(isset($request['end_date']) && !empty($request['end_date'])){
+                   $end_date = date('Y-m-d', strtotime($request['end_date']));
+                }else{
+                    $end_date = null;
+                }
             if($end_date < $start_date) {
                 return $this->responseHelper->api_response(null, 422,"error", "End date must be after the start date");
             }else{
@@ -66,9 +76,11 @@ class TimeSheetServices {
                 $timesheetData->localwork = $request['localwork'];
                 $timesheetData->scanning = $request['scanning'];
                 $timesheetData->hours = $request['hours'];
-                $timesheetData->break = $request['break'];
-                $timesheetData->break_duration = $request['break_duration'];
-                $timesheetData->break_duration_type = $request['break_duration_type'];
+                if(isset($request['break']) && $request['break'] == 1){
+                    $timesheetData->break = $request['break'];
+                    $timesheetData->break_duration = $request['break_duration'];
+                    $timesheetData->break_duration_type = $request['break_duration_type'];
+                 }                 
                 $assignAdminData = collect($request['assign_admin'])->map(function ($adminData) {
                     return [
                         'admin_id' => $adminData['admin_id'],
