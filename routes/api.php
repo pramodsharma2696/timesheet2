@@ -56,6 +56,7 @@ Route::group(
                 Route::post('/add-local-worker',[TimeSheetController::class, 'addLocalWorker']);
                 Route::post('/invite-worker',[TimeSheetController::class, 'InviteWorker']);
                 Route::post('/update-worker',[TimeSheetController::class, 'UpdateWorker']);
+                Route::get('/all-worker',[TimeSheetController::class, 'showWorkers']);
                            
             });
     }

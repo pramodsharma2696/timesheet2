@@ -117,6 +117,14 @@ class TimeSheetController extends Controller
         }
     }
 
+    public function showWorkers(){
+        try {
+            $this->timeSheetServices->showWorkers();
+        } catch (\Exception $e) {
+            return $this->responseHelper->api_response(null, 422,"error", $e->getMessage());
+        }
+    }
+
     
 
     

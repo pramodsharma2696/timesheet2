@@ -276,4 +276,13 @@ class TimeSheetServices
             return $this->responseHelper->api_response(null, 422, "error", "Worker does not exist.");
         }
     }
+    public function showWorkers()
+    {
+        $worker = LocalWorker::all();
+        if (!empty($worker)){
+            return $this->responseHelper->api_response($worker, 200, "success", 'success.');
+        } else {
+            return $this->responseHelper->api_response(null, 422, "error", "Worker does not exist.");
+        }
+    }
 }
