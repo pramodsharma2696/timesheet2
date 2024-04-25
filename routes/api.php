@@ -57,6 +57,7 @@ Route::group(
                 Route::post('/invite-worker',[TimeSheetController::class, 'InviteWorker']);
                 Route::post('/update-worker',[TimeSheetController::class, 'UpdateWorker']);
                 Route::get('/all-worker',[TimeSheetController::class, 'showWorkers']);            
+                Route::get('/worker/{timesheetid}',[TimeSheetController::class, 'getTimesheetIdBasedWorker']);            
             });
     }
 );

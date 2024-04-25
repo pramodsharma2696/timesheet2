@@ -285,4 +285,14 @@ class TimeSheetServices
             return $this->responseHelper->api_response(null, 422, "error", "Worker does not exist.");
         }
     }
+
+    public function getTimesheetIdBasedWorker($timesheetId)
+    {
+        $worker = LocalWorker::where('timesheet_id',$timesheetId)->get();
+        if (!empty($worker)){
+            return $this->responseHelper->api_response($worker, 200, "success", 'success.');
+        } else {
+            return $this->responseHelper->api_response(null, 422, "error", "data does not exist.");
+        }
+    }
 }
