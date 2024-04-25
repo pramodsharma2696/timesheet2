@@ -83,6 +83,39 @@ class TimeSheetController extends Controller
             return $this->responseHelper->api_response(null, 422,"error", $e->getMessage());
         }
     }
+   
+
+    public function addLocalWorker(Request $request){
+
+        foreach ($request->all() as $data) {
+            $validation = $this->responseHelper->api_validate_request($data, config('rules.addLocalWorker'));
+            if ($validation !== false) {
+                $this->timeSheetServices->addLocalWorker($request->all());
+            }else{
+                return $this->responseHelper->api_response(null,422,"error", $validation);
+            }
+        }
+
+    }
+    public function InviteWorker(Request $request){
+        foreach ($request->all() as $data) {
+            $validation = $this->responseHelper->api_validate_request($data, config('rules.InviteWorker'));
+            if ($validation !== false) {
+                $this->timeSheetServices->InviteWorker($request->all());
+            }else{
+                return $this->responseHelper->api_response(null,422,"error", $validation);
+            }
+        }
+
+    }
+
+    public function UpdateWorker(Request $request){
+        try {
+            $this->timeSheetServices->updateWorker($request->all());
+        } catch (\Exception $e) {
+            return $this->responseHelper->api_response(null, 422,"error", $e->getMessage());
+        }
+    }
 
     
 
