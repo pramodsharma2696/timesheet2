@@ -62,6 +62,28 @@ class TimeSheetController extends Controller
         }
     }
 
+    public function generateTimeSheetId(){
+        try {
+            $this->timeSheetServices->generateTimeSheetId();
+        } catch (\Exception $e) {
+            return $this->responseHelper->api_response(null, 422,"error", $e->getMessage());
+        }
+    }
+    public function generateQR($id){
+        try {
+            $this->timeSheetServices->generateQR($id);
+        } catch (\Exception $e) {
+            return $this->responseHelper->api_response(null, 422,"error", $e->getMessage());
+        }
+    }
+    public function RefreshQR($id){
+        try {
+            $this->timeSheetServices->refreshQR($id);
+        } catch (\Exception $e) {
+            return $this->responseHelper->api_response(null, 422,"error", $e->getMessage());
+        }
+    }
+
     
 
     

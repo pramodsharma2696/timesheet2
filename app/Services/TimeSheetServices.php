@@ -1,8 +1,11 @@
 <?php
 namespace App\Services;
 
-use App\Helpers\ResponseHelper;
 use App\Models\TimeSheet;
+use App\Models\ProjectList;
+use App\Helpers\ResponseHelper;
+use BaconQrCode\Encoder\QrCode;
+use Illuminate\Support\Facades\Response;
 
 class TimeSheetServices {
 
@@ -117,6 +120,7 @@ class TimeSheetServices {
             return $this->responseHelper->api_response(null, 422,"error", "This timesheet does not exist.");
         }
     }
+    
     public function deleteTimesheet($id){
         $timesheetData = TimeSheet::where('id', $id)->first();
         if(!empty($timesheetData)){
@@ -126,6 +130,64 @@ class TimeSheetServices {
             return $this->responseHelper->api_response(null, 422,"error", "This timesheet does not exist.");
         }
     }
+
+    public function generateTimeSheetId(){
+        $timesheetCount = TimeSheet::count();
+        $newTimeSheetId = $timesheetCount + 1;
+        return $this->responseHelper->api_response(['timesheetId'=>$newTimeSheetId], 200, "success", 'Time sheet ID generated successfully.');
+    }
+    public function generateQR($projectId){
+        $projectData = ProjectList::where('id', $projectId)->first();
+        
+        if (!empty($projectData)) {
+            $qrDirectoryPath = public_path('storage/QRCODE/');
+            // Check if the directory exists, if not, create it
+            if (!file_exists($qrDirectoryPath)) {
+                mkdir($qrDirectoryPath, 0777, true); // Creates the directory
+            }
+            // Check if the QR code file exists
+            $checkQRExist = $qrDirectoryPath . 'project_' . $projectData->id . '_qrcode.png';
+            if (!file_exists($checkQRExist)) {
+                $qrfilename = $this->responseHelper->GenerateQR($projectData);
+                $original_dir_path = $qrfilename;
+                TimeSheet::where('project_id', $projectData->id)->update(['timesheet_qr' => $original_dir_path]);
+            } else {
+                $qrfiledata1 = TimeSheet::where('project_id', $projectData->id)->first();
+                
+                if (isset($qrfiledata1->timesheet_qr) && !is_null($qrfiledata1->timesheet_qr)) {
+                    $original_dir_path = $qrfiledata1->timesheet_qr;
+                } else {
+                    $qrfilename = $this->responseHelper->GenerateQR($projectData);
+                    $original_dir_path = $qrfilename;
+                    TimeSheet::where('project_id', $projectData->id)->update(['timesheet_qr' => $original_dir_path]);
+                }
+            }
+            
+            return $this->responseHelper->api_response(['timesheet_qr' => $original_dir_path], 200, "success", 'Timesheet QR is generated.');
+        } else {
+            return $this->responseHelper->api_response(null, 422, "error", "This project does not exist.");
+        }
+    }
+
+    public function refreshQR($projectId){
+        $projectData = ProjectList::where('id', $projectId)->first();
+        if (!empty($projectData)) {
+            $qrDirectoryPath = public_path('storage/REFRESHQRCODE/');
+            
+            if (!file_exists($qrDirectoryPath)) {
+                mkdir($qrDirectoryPath, 0777, true); // Creates the directory
+            }
+            
+            $original_dir_path = $this->responseHelper->GenerateRefreshQR($projectData); // Generate new QR code
+            TimeSheet::where('project_id', $projectData->id)->update(['timesheet_qr' => $original_dir_path]);
+            return $this->responseHelper->api_response(['timesheet_qr' => $original_dir_path], 200, "success", 'Timesheet QR is regenerated.');
+        } else {
+            return $this->responseHelper->api_response(null, 422, "error", "This project does not exist.");
+        }
+    }
+    
+    
+      
 
 }
 

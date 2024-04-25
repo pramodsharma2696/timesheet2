@@ -50,6 +50,9 @@ Route::group(
                 Route::get('/all-timesheet',[TimeSheetController::class, 'showAllTimeSheet']);
                 Route::post('/update-timesheet',[TimeSheetController::class, 'updateTimeSheet']);
                 Route::delete('/timesheet-delete/{id}',[TimeSheetController::class, 'deleteTimeSheet'])->where('id', '[0-9]+');
+                Route::get('/generate-timesheet-id',[TimeSheetController::class, 'generateTimeSheetId']);
+                Route::get('/generate-qr/{projectid}',[TimeSheetController::class, 'generateQR'])->where('id', '[0-9]+');
+                Route::get('/refresh-qr/{projectid}',[TimeSheetController::class, 'RefreshQR'])->where('id', '[0-9]+');
                                 
             });
     }

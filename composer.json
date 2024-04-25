@@ -6,6 +6,7 @@
     "license": "MIT",
     "require": {
         "php": "^8.1",
+        "bacon/bacon-qr-code": "*",
         "barryvdh/laravel-dompdf": "^2.0",
         "flugger/laravel-responder": "^3.3",
         "guzzlehttp/guzzle": "^7.2",
@@ -35,7 +36,10 @@
         },
         "files": [
             "app/Helpers/ResponseHelper.php"
-        ]
+        ],
+        "classmap":[
+            "app/Classes/SimpleQR"
+          ]
     },
     "autoload-dev": {
         "psr-4": {

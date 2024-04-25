@@ -16,13 +16,14 @@ return new class extends Migration
             $table->bigInteger('user_id')->unsigned();
             $table->bigInteger('project_id')->unsigned()->nullable();
             $table->date('start_date');
-            $table->date('end_date')->nullable();
-            $table->enum('status',[0, 1])->default(0);
+            $table->date('end_date');
+            $table->enum('status',[0, 1])->default(1);
             $table->enum('localwork',[0, 1])->default(0);
             $table->enum('scanning',[0, 1])->default(0);
             $table->enum('hours',[0, 1])->default(0);
             $table->enum('break',[0, 1])->default(0);
-            $table->integer('break_duration')->nullable();;
+            $table->integer('break_duration');
+            $table->string('timesheet_qr')->nullable();
             $table->enum('break_duration_type',['hours','minutes'])->default('hours');
             $table->json("assign_admin");
             $table->timestamps();

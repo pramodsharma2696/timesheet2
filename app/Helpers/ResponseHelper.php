@@ -3,6 +3,8 @@
 namespace App\Helpers;
 
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Storage;
+use App\Classes\SimpleQR;
 
 class ResponseHelper {
 
@@ -30,6 +32,36 @@ class ResponseHelper {
 
             return true;
     }
+
+    public function GenerateQR($projectData){
+        $qrCodeContent = 'Project ID: ' . $projectData->id . ', Project Desr: ' . $projectData->desr;
+        $qrfile = 'project_'.$projectData->id.'_qrcode.png';
+        $errorCorrectionLevel = 'L';
+        $matrixPointSize = 10;
+        $qrfilename =  Storage::disk('public_qrcodes')->path($qrfile);
+        \QRcode::png($qrCodeContent, $qrfilename, $errorCorrectionLevel, $matrixPointSize, 2);
+        return Storage::disk('public_qrcodes')->url($qrfile);
+    }
+//     public function GenerateRefreshQR($projectData){
+//         $qrCodeContent = 'Project ID: ' . $projectData->id . ', Project Desr: ' . $projectData->desr;
+//         $qrfile = 'project_'.$projectData->id.'_qrcode.png';
+//         $errorCorrectionLevel = 'L';
+//         $matrixPointSize = 10;
+//         $qrfilename =  Storage::disk('public_refresh_qrcodes')->path($qrfile);
+//         \QRcode::png($qrCodeContent, $qrfilename, $errorCorrectionLevel, $matrixPointSize, 2);
+//         return $qrfile;
+//     }
+public function GenerateRefreshQR($projectData){
+        $qrCodeContent = 'Project ID: ' . $projectData->id . ', Project Desr: ' . $projectData->desr;
+        $qrfile = 'project_'.$projectData->id.'_qrcode.png';
+        $errorCorrectionLevel = 'L';
+        $matrixPointSize = 10;
+        $qrfilename = Storage::disk('public_refresh_qrcodes')->path($qrfile);
+        \QRcode::png($qrCodeContent, $qrfilename, $errorCorrectionLevel, $matrixPointSize, 2);
+        return Storage::disk('public_refresh_qrcodes')->url($qrfile);
+    }
+    
+
 
 }
 

@@ -43,6 +43,18 @@ return [
             'visibility' => 'public',
             'throw' => false,
         ],
+        'public_qrcodes' => [
+            'driver' => 'local',
+            'root'   => storage_path('app/public') . '/QRCODE',
+            'url' => env('APP_URL').'/storage/QRCODE',
+            'visibility' => 'public',
+        ],
+        'public_refresh_qrcodes' => [
+            'driver' => 'local',
+            'root'   => storage_path('app/public') . '/REFRESHQRCODE',
+            'url' => env('APP_URL').'/storage/REFRESHQRCODE',
+            'visibility' => 'public',
+        ],
 
         's3' => [
             'driver' => 's3',
