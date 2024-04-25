@@ -27,6 +27,7 @@ class TimeSheetServices {
         }else{
         $createTimesheet = new TimeSheet();
         $createTimesheet->user_id = $userid;
+        $createTimesheet->timesheet_id = $request['timesheet_id'];
         $createTimesheet->project_id = $request['projectid'];
         $createTimesheet->start_date = $start_date;
         $createTimesheet->end_date = $end_date;
@@ -50,6 +51,7 @@ class TimeSheetServices {
         })->toJson();
 
         $createTimesheet->assign_admin = $assignAdminData;
+        $createTimesheet->timesheet_qr = $this->generateQR($request['projectid']);
         $createTimesheet->save();
         $timesheetData = TimeSheet::with('project')->where('id', $createTimesheet->id)->first();
         return $this->responseHelper->api_response($timesheetData, 200,"success", 'Timesheet created.');
@@ -136,16 +138,46 @@ class TimeSheetServices {
         $newTimeSheetId = $timesheetCount + 1;
         return $this->responseHelper->api_response(['timesheetId'=>$newTimeSheetId], 200, "success", 'Time sheet ID generated successfully.');
     }
+    // public function generateQR($projectId){
+    //     $projectData = ProjectList::where('id', $projectId)->first();
+        
+    //     if (!empty($projectData)) {
+    //         $qrDirectoryPath = public_path('storage/QRCODE/');
+    //         // Check if the directory exists, if not, create it
+    //         if (!file_exists($qrDirectoryPath)) {
+    //             mkdir($qrDirectoryPath, 0777, true); // Creates the directory
+    //         }
+    //         // Check if the QR code file exists
+    //         $checkQRExist = $qrDirectoryPath . 'project_' . $projectData->id . '_qrcode.png';
+    //         if (!file_exists($checkQRExist)) {
+    //             $qrfilename = $this->responseHelper->GenerateQR($projectData);
+    //             $original_dir_path = $qrfilename;
+    //             TimeSheet::where('project_id', $projectData->id)->update(['timesheet_qr' => $original_dir_path]);
+    //         } else {
+    //             $qrfiledata1 = TimeSheet::where('project_id', $projectData->id)->first();
+                
+    //             if (isset($qrfiledata1->timesheet_qr) && !is_null($qrfiledata1->timesheet_qr)) {
+    //                 $original_dir_path = $qrfiledata1->timesheet_qr;
+    //             } else {
+    //                 $qrfilename = $this->responseHelper->GenerateQR($projectData);
+    //                 $original_dir_path = $qrfilename;
+    //                 TimeSheet::where('project_id', $projectData->id)->update(['timesheet_qr' => $original_dir_path]);
+    //             }
+    //         }
+            
+    //         return $this->responseHelper->api_response(['timesheet_qr' => $original_dir_path], 200, "success", 'Timesheet QR is generated.');
+    //     } else {
+    //         return $this->responseHelper->api_response(null, 422, "error", "This project does not exist.");
+    //     }
+    // }
+
     public function generateQR($projectId){
         $projectData = ProjectList::where('id', $projectId)->first();
-        
         if (!empty($projectData)) {
             $qrDirectoryPath = public_path('storage/QRCODE/');
-            // Check if the directory exists, if not, create it
             if (!file_exists($qrDirectoryPath)) {
-                mkdir($qrDirectoryPath, 0777, true); // Creates the directory
+                mkdir($qrDirectoryPath, 0777, true); 
             }
-            // Check if the QR code file exists
             $checkQRExist = $qrDirectoryPath . 'project_' . $projectData->id . '_qrcode.png';
             if (!file_exists($checkQRExist)) {
                 $qrfilename = $this->responseHelper->GenerateQR($projectData);
@@ -162,12 +194,11 @@ class TimeSheetServices {
                     TimeSheet::where('project_id', $projectData->id)->update(['timesheet_qr' => $original_dir_path]);
                 }
             }
-            
-            return $this->responseHelper->api_response(['timesheet_qr' => $original_dir_path], 200, "success", 'Timesheet QR is generated.');
+            return $original_dir_path;
         } else {
-            return $this->responseHelper->api_response(null, 422, "error", "This project does not exist.");
+            return null;
         }
-    }
+    }    
 
     public function refreshQR($projectId){
         $projectData = ProjectList::where('id', $projectId)->first();

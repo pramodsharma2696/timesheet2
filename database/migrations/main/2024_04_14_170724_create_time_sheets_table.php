@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('time_sheets', function (Blueprint $table) {
             $table->id();
+            $table->bigInteger('timesheet_id')->unsigned();
             $table->bigInteger('user_id')->unsigned();
             $table->bigInteger('project_id')->unsigned()->nullable();
             $table->date('start_date');
