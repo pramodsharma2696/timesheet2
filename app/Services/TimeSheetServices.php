@@ -2,10 +2,12 @@
 
 namespace App\Services;
 
+use Carbon\Carbon;
 use App\Models\TimeSheet;
+use App\Models\Attendance;
+use App\Models\LocalWorker;
 use App\Models\ProjectList;
 use App\Helpers\ResponseHelper;
-use App\Models\LocalWorker;
 use BaconQrCode\Encoder\QrCode;
 use Illuminate\Support\Facades\Response;
 
@@ -146,38 +148,7 @@ class TimeSheetServices
         $newTimeSheetId = $timesheetCount + 1;
         return $this->responseHelper->api_response(['timesheetId' => $newTimeSheetId], 200, "success", 'Time sheet ID generated successfully.');
     }
-    // public function generateQR($projectId){
-    //     $projectData = ProjectList::where('id', $projectId)->first();
-
-    //     if (!empty($projectData)) {
-    //         $qrDirectoryPath = public_path('storage/QRCODE/');
-    //         // Check if the directory exists, if not, create it
-    //         if (!file_exists($qrDirectoryPath)) {
-    //             mkdir($qrDirectoryPath, 0777, true); // Creates the directory
-    //         }
-    //         // Check if the QR code file exists
-    //         $checkQRExist = $qrDirectoryPath . 'project_' . $projectData->id . '_qrcode.png';
-    //         if (!file_exists($checkQRExist)) {
-    //             $qrfilename = $this->responseHelper->GenerateQR($projectData);
-    //             $original_dir_path = $qrfilename;
-    //             TimeSheet::where('project_id', $projectData->id)->update(['timesheet_qr' => $original_dir_path]);
-    //         } else {
-    //             $qrfiledata1 = TimeSheet::where('project_id', $projectData->id)->first();
-
-    //             if (isset($qrfiledata1->timesheet_qr) && !is_null($qrfiledata1->timesheet_qr)) {
-    //                 $original_dir_path = $qrfiledata1->timesheet_qr;
-    //             } else {
-    //                 $qrfilename = $this->responseHelper->GenerateQR($projectData);
-    //                 $original_dir_path = $qrfilename;
-    //                 TimeSheet::where('project_id', $projectData->id)->update(['timesheet_qr' => $original_dir_path]);
-    //             }
-    //         }
-
-    //         return $this->responseHelper->api_response(['timesheet_qr' => $original_dir_path], 200, "success", 'Timesheet QR is generated.');
-    //     } else {
-    //         return $this->responseHelper->api_response(null, 422, "error", "This project does not exist.");
-    //     }
-    // }
+   
 
     public function generateQR($projectId)
     {
@@ -295,4 +266,113 @@ class TimeSheetServices
             return $this->responseHelper->api_response(null, 422, "error", "data does not exist.");
         }
     }
+    public function getTimesheetIdAndDateBasedWorker($timesheetid, $date)
+    {
+        // Convert the provided date to match the database format
+        $formattedDate = Carbon::createFromFormat('d-m-Y', $date)->format('Y-m-d');
+        $workers = LocalWorker::with(['attendance:id,worker_id,attendance,total_hours,date'])
+                        ->where('timesheet_id', $timesheetid)
+                        ->whereHas('attendance', function ($query) use ($formattedDate) {
+                            $query->whereDate('date', $formattedDate);
+                        })
+                        ->get();
+        if ($workers->isNotEmpty()) {
+            return $this->responseHelper->api_response($workers, 200, "success", 'success.');
+        } else {
+            return $this->responseHelper->api_response(null, 422, "error", "No data available for the provided date.");
+        }
+    }
+    
+
+    public function recordAttendance($request)
+    {
+        // Find the worker and timesheet
+        $worker = LocalWorker::find($request['worker_id']);
+        $timesheet = TimeSheet::find($request['timesheet_id']);
+    
+        // Check if the worker and timesheet exist
+        if (!$worker) {
+            return $this->responseHelper->api_response(null, 422, "error", "Worker does not exist.");
+        }
+    
+        if (!$timesheet) {
+            return $this->responseHelper->api_response(null, 422, "error", "Timesheet does not exist.");
+        }
+    
+        // Convert time from 12-hour format to 24-hour format and validate
+        $timeEntries = [];
+        for ($i = 1; $i <= 3; $i++) {
+            $inTime = $request['in_time' . $i];
+            $outTime = $request['out_time' . $i];
+    
+            // Skip conversion and validation if both in and out times are empty
+            if (empty($inTime) && empty($outTime)) {
+                continue;
+            }
+    
+            // If both in and out times are provided together or only one is provided, add them to the timeEntries array
+            if (!empty($inTime) || !empty($outTime)) {
+                // If only one of in time or out time is provided, set it to null
+                if (empty($inTime)) {
+                    $inTime = null;
+                }
+                if (empty($outTime)) {
+                    $outTime = null;
+                }
+                $timeEntries[] = [
+                    'in_time' => $inTime,
+                    'out_time' => $outTime
+                ];
+            }
+        }
+    
+        // Calculate total working hours
+        $totalHours = 0;
+        foreach ($timeEntries as $entry) {
+            // Only calculate the difference if both in and out times are provided
+            if (!is_null($entry['in_time']) && !is_null($entry['out_time'])) {
+                $inTimeObj = Carbon::createFromFormat('h:i A', $entry['in_time']);
+                $outTimeObj = Carbon::createFromFormat('h:i A', $entry['out_time']);
+                $totalHours += $outTimeObj->diffInHours($inTimeObj);
+            }
+        }
+    
+        // Check if the attendance ID is provided for updating
+        if (!empty($request['attendance_id'])) {
+            // Update existing attendance record
+            $attendance = Attendance::find($request['attendance_id']);
+    
+            if (!$attendance) {
+                return $this->responseHelper->api_response(null, 422, "error", "Attendance record does not exist.");
+            }
+    
+            // Update the attendance record with the new data
+            $attendance->attendance = json_encode($timeEntries);
+            $attendance->total_hours = $totalHours;
+            $attendance->save();
+    
+            return $this->responseHelper->api_response($attendance, 200, "success", 'Attendance updated.');
+        } else {
+            // Create new attendance record
+            $attendance = new Attendance();
+            $attendance->user_id = auth()->user()->id;
+            $attendance->worker_id = $worker->id;
+            $attendance->timesheet_id = $timesheet->id;
+            $attendance->attendance = json_encode($timeEntries);
+            $attendance->date = Carbon::now();
+            $attendance->total_hours = $totalHours;
+            $attendance->save();
+    
+            return $this->responseHelper->api_response($attendance, 200, "success", 'Attendance recorded.');
+        }
+    }
+    
+
+
+
+
+
+    
+
+
 }

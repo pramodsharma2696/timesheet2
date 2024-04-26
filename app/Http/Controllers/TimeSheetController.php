@@ -132,6 +132,29 @@ class TimeSheetController extends Controller
         }
     }
 
+    public function getTimesheetIdAndDateBasedWorker($timesheetid, $date){
+        try {
+            $this->timeSheetServices->getTimesheetIdAndDateBasedWorker($timesheetid, $date);
+        } catch (\Exception $e) {
+            return $this->responseHelper->api_response(null, 422,"error", $e->getMessage());
+        }
+    }
+
+
+
+    public function Attendance(Request $request){
+        $validation = $this->responseHelper->api_validate_request($request->all(), config('rules.Attendance'));
+        if ($validation !== false) {
+            try {
+                $this->timeSheetServices->recordAttendance($request->all());
+            } catch (\Exception $e) {
+                return $this->responseHelper->api_response(null, 422,"error", $e->getMessage());
+            }
+        }else{
+            return $this->responseHelper->api_response(null,422,"error", $validation);
+        }
+    }
+
     
 
     

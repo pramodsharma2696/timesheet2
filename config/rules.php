@@ -15,6 +15,14 @@ return [
         'first_name' => 'required',
         'last_name' => 'required',
     ],
+    'Attendance' => [
+        'worker_id' => 'required',
+        'timesheet_id' => 'required'
+    ],
+    'getTimesheetIdAndDateBasedWorker' => [
+        'date' => 'required',
+        'timesheet_id' => 'required'
+    ],
     'InviteWorker' => [
         'first_name' => 'required',
         'last_name' => 'required',
