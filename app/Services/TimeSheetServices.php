@@ -148,7 +148,7 @@ class TimeSheetServices
         $newTimeSheetId = $timesheetCount + 1;
         return $this->responseHelper->api_response(['timesheetId' => $newTimeSheetId], 200, "success", 'Time sheet ID generated successfully.');
     }
-   
+
 
     public function generateQR($projectId)
     {
@@ -250,7 +250,7 @@ class TimeSheetServices
     public function showWorkers()
     {
         $worker = LocalWorker::all();
-        if (!empty($worker)){
+        if (!empty($worker)) {
             return $this->responseHelper->api_response($worker, 200, "success", 'success.');
         } else {
             return $this->responseHelper->api_response(null, 422, "error", "Worker does not exist.");
@@ -259,57 +259,67 @@ class TimeSheetServices
 
     public function getTimesheetIdBasedWorker($timesheetId)
     {
-        $worker = LocalWorker::where('timesheet_id',$timesheetId)->get();
-        if (!empty($worker)){
+        $worker = LocalWorker::where('timesheet_id', $timesheetId)->get();
+        if (!empty($worker)) {
             return $this->responseHelper->api_response($worker, 200, "success", 'success.');
         } else {
             return $this->responseHelper->api_response(null, 422, "error", "data does not exist.");
         }
     }
+
     public function getTimesheetIdAndDateBasedWorker($timesheetid, $date)
     {
         // Convert the provided date to match the database format
         $formattedDate = Carbon::createFromFormat('d-m-Y', $date)->format('Y-m-d');
+
+        // Retrieve workers with attendance records for the specified date
         $workers = LocalWorker::with(['attendance:id,worker_id,attendance,total_hours,date'])
-                        ->where('timesheet_id', $timesheetid)
-                        ->whereHas('attendance', function ($query) use ($formattedDate) {
-                            $query->whereDate('date', $formattedDate);
-                        })
-                        ->get();
+            ->where('timesheet_id', $timesheetid)
+            ->whereHas('attendance', function ($query) use ($formattedDate) {
+                $query->whereDate('date', $formattedDate);
+            })
+            ->get();
+
+        // If no attendance records match the date, retrieve workers without filtering by date
+        if ($workers->isEmpty()) {
+            $workers = LocalWorker::where('timesheet_id', $timesheetid)->get();
+        }
+
         if ($workers->isNotEmpty()) {
             return $this->responseHelper->api_response($workers, 200, "success", 'success.');
         } else {
             return $this->responseHelper->api_response(null, 422, "error", "No data available for the provided date.");
         }
     }
-    
+
+
 
     public function recordAttendance($request)
     {
         // Find the worker and timesheet
         $worker = LocalWorker::find($request['worker_id']);
-        $timesheet = TimeSheet::find($request['timesheet_id']);
-    
+        $timesheet = TimeSheet::where('timesheet_id', $request['timesheet_id'])->first();
+
         // Check if the worker and timesheet exist
         if (!$worker) {
             return $this->responseHelper->api_response(null, 422, "error", "Worker does not exist.");
         }
-    
+
         if (!$timesheet) {
             return $this->responseHelper->api_response(null, 422, "error", "Timesheet does not exist.");
         }
-    
+
         // Convert time from 12-hour format to 24-hour format and validate
         $timeEntries = [];
         for ($i = 1; $i <= 3; $i++) {
             $inTime = $request['in_time' . $i];
             $outTime = $request['out_time' . $i];
-    
+
             // Skip conversion and validation if both in and out times are empty
             if (empty($inTime) && empty($outTime)) {
                 continue;
             }
-    
+
             // If both in and out times are provided together or only one is provided, add them to the timeEntries array
             if (!empty($inTime) || !empty($outTime)) {
                 // If only one of in time or out time is provided, set it to null
@@ -325,7 +335,7 @@ class TimeSheetServices
                 ];
             }
         }
-    
+
         // Calculate total working hours
         $totalHours = 0;
         foreach ($timeEntries as $entry) {
@@ -336,21 +346,21 @@ class TimeSheetServices
                 $totalHours += $outTimeObj->diffInHours($inTimeObj);
             }
         }
-    
+
         // Check if the attendance ID is provided for updating
         if (!empty($request['attendance_id'])) {
             // Update existing attendance record
             $attendance = Attendance::find($request['attendance_id']);
-    
+
             if (!$attendance) {
                 return $this->responseHelper->api_response(null, 422, "error", "Attendance record does not exist.");
             }
-    
+
             // Update the attendance record with the new data
             $attendance->attendance = json_encode($timeEntries);
             $attendance->total_hours = $totalHours;
             $attendance->save();
-    
+
             return $this->responseHelper->api_response($attendance, 200, "success", 'Attendance updated.');
         } else {
             // Create new attendance record
@@ -362,17 +372,8 @@ class TimeSheetServices
             $attendance->date = Carbon::now();
             $attendance->total_hours = $totalHours;
             $attendance->save();
-    
+
             return $this->responseHelper->api_response($attendance, 200, "success", 'Attendance recorded.');
         }
     }
-    
-
-
-
-
-
-    
-
-
 }
