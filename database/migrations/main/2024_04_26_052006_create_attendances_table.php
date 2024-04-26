@@ -18,6 +18,7 @@ return new class extends Migration
             $table->unsignedBigInteger('timesheet_id');
             $table->json('attendance');
             $table->date('date');
+            $table->enum('approve',[0, 1])->default(0)->comment('0:disapprove, 1:approve');
             $table->integer('total_hours')->nullable();
             $table->timestamps();
         });

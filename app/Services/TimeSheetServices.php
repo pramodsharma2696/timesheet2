@@ -273,11 +273,11 @@ class TimeSheetServices
         $formattedDate = Carbon::createFromFormat('d-m-Y', $date)->format('Y-m-d');
         // Retrieve all workers
         $workers = LocalWorker::with(['attendance' => function ($query) use ($formattedDate) {
-            $query->select('id', 'worker_id', 'attendance', 'total_hours', 'date')
-                  ->whereDate('date', $formattedDate);
+            $query->select('id', 'worker_id', 'attendance', 'total_hours', 'date','approve')
+                ->whereDate('date', $formattedDate);
         }])
-        ->where('timesheet_id', $timesheetid)
-        ->get();
+            ->where('timesheet_id', $timesheetid)
+            ->get();
         // Iterate over each worker and check if attendance matches the date
         foreach ($workers as $worker) {
             if ($worker->attendance && $worker->attendance->date !== $formattedDate) {
@@ -286,12 +286,6 @@ class TimeSheetServices
         }
         return $this->responseHelper->api_response($workers, 200, "success", 'success.');
     }
-    
-
-
-
-
-
 
     public function recordAttendance($request)
     {
@@ -310,6 +304,7 @@ class TimeSheetServices
 
         // Convert time from 12-hour format to 24-hour format and validate
         $timeEntries = [];
+        $totalHours = 0;
         for ($i = 1; $i <= 3; $i++) {
             $inTime = $request['in_time' . $i];
             $outTime = $request['out_time' . $i];
@@ -332,19 +327,19 @@ class TimeSheetServices
                     'in_time' => $inTime,
                     'out_time' => $outTime
                 ];
+
+                // Calculate difference in hours if both in and out times are provided
+                if (!is_null($inTime) && !is_null($outTime)) {
+                    $inTimeObj = Carbon::createFromFormat('h:i A', $inTime);
+                    $outTimeObj = Carbon::createFromFormat('h:i A', $outTime);
+                    $differenceInMinutes = $outTimeObj->diffInMinutes($inTimeObj);
+                    $totalHours += $differenceInMinutes / 60; // Convert minutes to hours
+                }
             }
         }
 
-        // Calculate total working hours
-        $totalHours = 0;
-        foreach ($timeEntries as $entry) {
-            // Only calculate the difference if both in and out times are provided
-            if (!is_null($entry['in_time']) && !is_null($entry['out_time'])) {
-                $inTimeObj = Carbon::createFromFormat('h:i A', $entry['in_time']);
-                $outTimeObj = Carbon::createFromFormat('h:i A', $entry['out_time']);
-                $totalHours += $outTimeObj->diffInHours($inTimeObj);
-            }
-        }
+        // Round total hours to two decimal places
+        $totalHours = round($totalHours, 2);
 
         // Check if the attendance ID is provided for updating
         if (!empty($request['attendance_id'])) {
@@ -375,4 +370,38 @@ class TimeSheetServices
             return $this->responseHelper->api_response($attendance, 200, "success", 'Attendance recorded.');
         }
     }
+
+    public function approveAttendance($request){
+        $Attendance = Attendance::where('id', $request['attendance_id'])->first();
+        if (!empty($Attendance)) {
+            Attendance::where('id', $request['attendance_id'])->update(['approve'=>$request['approve']]);
+            $UpdatedAttendace = Attendance::findOrFail($request['attendance_id']);
+            return $this->responseHelper->api_response($UpdatedAttendace, 200, "success", 'success.');
+        } else {
+            return $this->responseHelper->api_response(null, 422, "error", "Attendance does not exist.");
+        }
+    }
+    public function approveAllAttendance($request)
+    {
+        // Fetch all attendance records for the specified timesheet and date
+        $formattedDate = Carbon::createFromFormat('d-m-Y', $request['date'])->format('Y-m-d');
+        $Attendance = Attendance::where('timesheet_id', $request['timesheet_id'])
+                                ->whereDate('date', $formattedDate)
+                                ->get();
+    
+        // Check if any attendance records exist
+        if ($Attendance->isNotEmpty()) {
+            // Update each attendance record to mark as approved
+            foreach ($Attendance as $attendance) {
+                $attendance->approve = 1;
+                $attendance->save();
+            }
+            // Return the updated attendance records
+            return $this->responseHelper->api_response($Attendance, 200, "success", 'Success. Attendance approved.');
+        } else {
+            // No attendance records found
+            return $this->responseHelper->api_response(null, 422, "error", "Attendance does not exist.");
+        }
+    }
+    
 }

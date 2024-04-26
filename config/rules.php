@@ -19,6 +19,14 @@ return [
         'worker_id' => 'required',
         'timesheet_id' => 'required'
     ],
+    'approveAttendance' => [
+        'attendance_id' => 'required',
+        'approve' => 'required'
+    ],
+    'approveAllAttendance' => [
+        'timesheet_id' => 'required',
+        'date' => 'required'
+    ],
     'getTimesheetIdAndDateBasedWorker' => [
         'date' => 'required',
         'timesheet_id' => 'required'

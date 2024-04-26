@@ -155,6 +155,31 @@ class TimeSheetController extends Controller
         }
     }
 
+    public function approveAttendance(Request $request){
+        $validation = $this->responseHelper->api_validate_request($request->all(), config('rules.approveAttendance'));
+        if ($validation !== false) {
+            try {
+                $this->timeSheetServices->approveAttendance($request->all());
+            } catch (\Exception $e) {
+                return $this->responseHelper->api_response(null, 422,"error", $e->getMessage());
+            }
+        }else{
+            return $this->responseHelper->api_response(null,422,"error", $validation);
+        }
+    }
+    public function approveAllAttendance(Request $request){
+        $validation = $this->responseHelper->api_validate_request($request->all(), config('rules.approveAllAttendance'));
+        if ($validation !== false) {
+            try {
+                $this->timeSheetServices->approveAllAttendance($request->all());
+            } catch (\Exception $e) {
+                return $this->responseHelper->api_response(null, 422,"error", $e->getMessage());
+            }
+        }else{
+            return $this->responseHelper->api_response(null,422,"error", $validation);
+        }
+    }
+
     
 
     

@@ -51,7 +51,6 @@ Route::group(
                 Route::post('/update-timesheet',[TimeSheetController::class, 'updateTimeSheet']);
                 Route::delete('/timesheet-delete/{id}',[TimeSheetController::class, 'deleteTimeSheet'])->where('id', '[0-9]+');
                 Route::get('/generate-timesheet-id',[TimeSheetController::class, 'generateTimeSheetId']);
-                // Route::get('/generate-qr/{projectid}',[TimeSheetController::class, 'generateQR'])->where('id', '[0-9]+');
                 Route::get('/refresh-qr/{projectid}',[TimeSheetController::class, 'RefreshQR'])->where('id', '[0-9]+');
                 Route::post('/add-local-worker',[TimeSheetController::class, 'addLocalWorker']);
                 Route::post('/invite-worker',[TimeSheetController::class, 'InviteWorker']);
@@ -60,6 +59,8 @@ Route::group(
                 Route::get('/worker/{timesheetid}',[TimeSheetController::class, 'getTimesheetIdBasedWorker']); 
                 Route::get('/worker/{timesheetid}/{date}',[TimeSheetController::class, 'getTimesheetIdAndDateBasedWorker']); 
                 Route::post('/record-attendance',[TimeSheetController::class, 'Attendance']);           
+                Route::post('/approve-attendance',[TimeSheetController::class, 'approveAttendance']);           
+                Route::post('/approve-all-attendance',[TimeSheetController::class, 'approveAllAttendance']);           
             });
     }
 );
