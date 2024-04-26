@@ -271,26 +271,25 @@ class TimeSheetServices
     {
         // Convert the provided date to match the database format
         $formattedDate = Carbon::createFromFormat('d-m-Y', $date)->format('Y-m-d');
-
-        // Retrieve workers with attendance records for the specified date
-        $workers = LocalWorker::with(['attendance:id,worker_id,attendance,total_hours,date'])
-            ->where('timesheet_id', $timesheetid)
-            ->whereHas('attendance', function ($query) use ($formattedDate) {
-                $query->whereDate('date', $formattedDate);
-            })
-            ->get();
-
-        // If no attendance records match the date, retrieve workers without filtering by date
-        if ($workers->isEmpty()) {
-            $workers = LocalWorker::where('timesheet_id', $timesheetid)->get();
+        // Retrieve all workers
+        $workers = LocalWorker::with(['attendance' => function ($query) use ($formattedDate) {
+            $query->select('id', 'worker_id', 'attendance', 'total_hours', 'date')
+                  ->whereDate('date', $formattedDate);
+        }])
+        ->where('timesheet_id', $timesheetid)
+        ->get();
+        // Iterate over each worker and check if attendance matches the date
+        foreach ($workers as $worker) {
+            if ($worker->attendance && $worker->attendance->date !== $formattedDate) {
+                $worker->attendance = null;
+            }
         }
-
-        if ($workers->isNotEmpty()) {
-            return $this->responseHelper->api_response($workers, 200, "success", 'success.');
-        } else {
-            return $this->responseHelper->api_response(null, 422, "error", "No data available for the provided date.");
-        }
+        return $this->responseHelper->api_response($workers, 200, "success", 'success.');
     }
+    
+
+
+
 
 
 
