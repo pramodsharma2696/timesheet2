@@ -16,7 +16,8 @@ return new class extends Migration
             $table->unsignedBigInteger('user_id');
             $table->unsignedBigInteger('worker_id');
             $table->unsignedBigInteger('timesheet_id');
-            $table->json('attendance');
+            $table->json('attendance')->nullable();
+            $table->json('assigned_task_hours')->nullable();
             $table->date('date');
             $table->enum('approve',[0, 1])->default(0)->comment('0:disapprove, 1:approve');
             $table->integer('total_hours')->nullable();

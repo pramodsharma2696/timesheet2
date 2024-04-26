@@ -23,6 +23,12 @@ return [
         'attendance_id' => 'required',
         'approve' => 'required'
     ],
+    'assignTaskHours' => [
+        'worker_id' => 'required',
+        'timesheet_id' => 'required',
+        'date' => 'required',
+        'assign_task_hours' => 'required|array'
+    ],
     'approveAllAttendance' => [
         'timesheet_id' => 'required',
         'date' => 'required'

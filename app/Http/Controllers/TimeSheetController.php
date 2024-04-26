@@ -179,6 +179,18 @@ class TimeSheetController extends Controller
             return $this->responseHelper->api_response(null,422,"error", $validation);
         }
     }
+    public function assignTaskHours(Request $request){
+        $validation = $this->responseHelper->api_validate_request($request->all(), config('rules.assignTaskHours'));
+        if ($validation !== false) {
+            try {
+                $this->timeSheetServices->assignTaskHours($request->all());
+            } catch (\Exception $e) {
+                return $this->responseHelper->api_response(null, 422,"error", $e->getMessage());
+            }
+        }else{
+            return $this->responseHelper->api_response(null,422,"error", $validation);
+        }
+    }
 
     
 

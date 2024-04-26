@@ -61,6 +61,7 @@ Route::group(
                 Route::post('/record-attendance',[TimeSheetController::class, 'Attendance']);           
                 Route::post('/approve-attendance',[TimeSheetController::class, 'approveAttendance']);           
                 Route::post('/approve-all-attendance',[TimeSheetController::class, 'approveAllAttendance']);           
+                Route::post('/assign-task-hours',[TimeSheetController::class, 'assignTaskHours']);           
             });
     }
 );

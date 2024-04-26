@@ -349,13 +349,12 @@ class TimeSheetServices
             if (!$attendance) {
                 return $this->responseHelper->api_response(null, 422, "error", "Attendance record does not exist.");
             }
-
             // Update the attendance record with the new data
             $attendance->attendance = json_encode($timeEntries);
             $attendance->total_hours = $totalHours;
             $attendance->save();
-
-            return $this->responseHelper->api_response($attendance, 200, "success", 'Attendance updated.');
+            $attendanceData = Attendance::find($request['attendance_id']);
+            return $this->responseHelper->api_response($attendanceData, 200, "success", 'Attendance updated.');
         } else {
             // Create new attendance record
             $attendance = new Attendance();
@@ -363,11 +362,11 @@ class TimeSheetServices
             $attendance->worker_id = $worker->id;
             $attendance->timesheet_id = $timesheet->timesheet_id;
             $attendance->attendance = json_encode($timeEntries);
-            $attendance->date = Carbon::now();
+            $attendance->date = Carbon::createFromFormat('d-m-Y', $request['date'])->format('Y-m-d');
             $attendance->total_hours = $totalHours;
             $attendance->save();
-
-            return $this->responseHelper->api_response($attendance, 200, "success", 'Attendance recorded.');
+            $attendanceData = Attendance::find($attendance->id);
+            return $this->responseHelper->api_response($attendanceData, 200, "success", 'Attendance recorded.');
         }
     }
 
@@ -403,5 +402,63 @@ class TimeSheetServices
             return $this->responseHelper->api_response(null, 422, "error", "Attendance does not exist.");
         }
     }
+
+
+    public function assignTaskHours($request){
+       
+     // Find the worker and timesheet
+     $worker = LocalWorker::find($request['worker_id']);
+     $timesheet = TimeSheet::where('timesheet_id', $request['timesheet_id'])->first();
+     
+     // Check if the worker and timesheet exist
+     if (!$worker) {
+         return $this->responseHelper->api_response(null, 422, "error", "Worker does not exist.");
+     }
+
+     if (!$timesheet) {
+         return $this->responseHelper->api_response(null, 422, "error", "Timesheet does not exist.");
+     }
+
+     // Convert the assign_task_hours array to JSON
+    $assignTaskHoursJson = json_encode($request['assign_task_hours']);
+    
+    // Validate that combined hours do not exceed 24
+    $totalHours = array_sum($request['assign_task_hours']);
+    if ($totalHours > 24) {
+        return $this->responseHelper->api_response(null, 422, "error", "Total hours cannot exceed 24.");
+    }
+    $formattedDate = Carbon::createFromFormat('d-m-Y', $request['date'])->format('Y-m-d');
+    $attendance = Attendance::where('worker_id',$worker->id)->where('timesheet_id',$timesheet->timesheet_id)->whereDate('date', $formattedDate)->first();
+    if(!is_null($attendance)){
+        // Update attendance record
+        $attendance->user_id = auth()->user()->id;
+        $attendance->worker_id = $worker->id;
+        $attendance->timesheet_id = $timesheet->timesheet_id;
+        $attendance->assigned_task_hours = $assignTaskHoursJson;
+        $attendance->date = Carbon::now();
+        $attendance->save();
+     $attendanceData = Attendance::where('worker_id',$attendance->worker_id)->where('timesheet_id',$attendance->timesheet_id)->whereDate('date', $formattedDate)->first();
+        return $this->responseHelper->api_response($attendanceData, 200, "success", 'Task hours assigned successfully.');
+    }else{
+     // create attendance record
+     $attendance = new Attendance();
+     $attendance->user_id = auth()->user()->id;
+     $attendance->worker_id = $worker->id;
+     $attendance->timesheet_id = $timesheet->timesheet_id;
+     $attendance->assigned_task_hours = $assignTaskHoursJson;
+     $attendance->date = Carbon::now();
+     $attendance->save();
+     $attendanceData = Attendance::where('worker_id',$attendance->worker_id)->where('timesheet_id',$attendance->timesheet_id)->whereDate('date', $formattedDate)->first();
+     return $this->responseHelper->api_response($attendanceData, 200, "success", 'Task hours assigned successfully.');
+    }
+     
+    }
+
+
+
+
+
+
+
     
 }
