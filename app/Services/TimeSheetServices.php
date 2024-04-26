@@ -361,7 +361,7 @@ class TimeSheetServices
             $attendance = new Attendance();
             $attendance->user_id = auth()->user()->id;
             $attendance->worker_id = $worker->id;
-            $attendance->timesheet_id = $timesheet->id;
+            $attendance->timesheet_id = $timesheet->timesheet_id;
             $attendance->attendance = json_encode($timeEntries);
             $attendance->date = Carbon::now();
             $attendance->total_hours = $totalHours;
