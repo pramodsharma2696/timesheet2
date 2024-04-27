@@ -393,11 +393,11 @@ class TimeSheetServices
             // Update each attendance record to mark as approved
             foreach ($Attendance as $attendance) {
                 if($request['approve'] === '1'){
-                    $attendance->approve = 1;
+                    $attendance->approve = '1';
                     $attendance->save();
                 }
                 if($request['approve'] === '0'){
-                    $attendance->approve = 0;
+                    $attendance->approve = '0';
                     $attendance->save();
                 }
             }
