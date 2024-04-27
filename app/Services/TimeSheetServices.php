@@ -461,10 +461,41 @@ class TimeSheetServices
     }
 
 
-
-
-
-
+    public function getInOutAttendanceData($type, $startDate, $endDate) {
+        // Parse start and end dates to ensure they're in the correct format
+        $startDate = date('Y-m-d', strtotime($startDate));
+        $endDate = date('Y-m-d', strtotime($endDate));
+    
+        // Query the database based on the type
+        if ($type === 'weekly') {
+            $attendances = Attendance::whereBetween('date', [$startDate, $endDate])->get();
+        } elseif ($type === 'monthly') {
+            // Assuming monthly data is fetched based on the entire month
+            $startOfMonth = date('Y-m-01', strtotime($startDate));
+            $endOfMonth = date('Y-m-t', strtotime($endDate));
+            $attendances = Attendance::whereBetween('date', [$startOfMonth, $endOfMonth])->get();
+        }
+    
+        // Process $attendances to get first inTime and last OutTime
+        foreach ($attendances as $attendance) {
+            $attendanceData = json_decode($attendance->attendance, true);
+            if (is_array($attendanceData) && count($attendanceData) > 0) {
+                $firstInTime = $attendanceData[0]['in_time'];
+                $lastOutTime = end($attendanceData)['out_time'];
+                $attendance->first_in_time = $firstInTime;
+                $attendance->last_out_time = $lastOutTime;
+            }
+        }
+    
+        // Prepare response data
+        $data = [
+            'attendances' => $attendances,
+        ];
+        
+        // Return the response
+        return $this->responseHelper->api_response($data, 200, "success", 'success.');
+    }
+    
 
     
 }

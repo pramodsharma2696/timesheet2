@@ -131,6 +131,7 @@ class TimeSheetController extends Controller
             return $this->responseHelper->api_response(null, 422,"error", $e->getMessage());
         }
     }
+   
 
     public function getTimesheetIdAndDateBasedWorker($timesheetid, $date){
         try {
@@ -192,7 +193,13 @@ class TimeSheetController extends Controller
         }
     }
 
-    
+    public function getInOutAttendanceData($type,$startDate,$endDate){
+        try {
+            $this->timeSheetServices->getInOutAttendanceData($type,$startDate,$endDate);
+        } catch (\Exception $e) {
+            return $this->responseHelper->api_response(null, 422,"error", $e->getMessage());
+        }
+    }
 
     
     
