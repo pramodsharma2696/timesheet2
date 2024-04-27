@@ -15,6 +15,10 @@ return [
         'first_name' => 'required',
         'last_name' => 'required',
     ],
+    'addLocalWorkercsv' => [
+        'timesheet_id' => 'required',
+        'file' => 'required',
+    ],
     'Attendance' => [
         'worker_id' => 'required',
         'timesheet_id' => 'required'

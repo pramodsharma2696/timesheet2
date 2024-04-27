@@ -7,6 +7,7 @@ use App\Models\TimeSheet;
 use App\Models\Attendance;
 use App\Models\LocalWorker;
 use App\Models\ProjectList;
+use League\Csv\Reader;
 use App\Helpers\ResponseHelper;
 use BaconQrCode\Encoder\QrCode;
 use Illuminate\Support\Facades\Response;
@@ -502,8 +503,8 @@ class TimeSheetServices
         $workers = LocalWorker::with(['attendance' => function ($query) use ($timesheetid) {
             $query->select('worker_id')
                 ->selectRaw('SUM(total_hours) as total_hours')
-                ->selectRaw('SUM(CASE WHEN approve = "1" THEN 1 ELSE 0 END) as total_approve')
-                ->selectRaw('SUM(CASE WHEN approve = "0" THEN 1 ELSE 0 END) as total_disapprove')
+                ->selectRaw('SUM(CASE WHEN approve = "1" THEN total_hours ELSE 0 END) as total_hours_approve')
+                ->selectRaw('SUM(CASE WHEN approve = "0" THEN total_hours ELSE 0 END) as total_hours_disapprove')
                 ->where('timesheet_id', $timesheetid)
                 ->groupBy('worker_id');
         }])
@@ -516,6 +517,28 @@ class TimeSheetServices
         // Retrieve count of all workers 
         $workers = LocalWorker::where('timesheet_id',$timesheetid)->count();
         return $this->responseHelper->api_response(['total_workers'=>$workers], 200, "success", 'success.');
+    }
+    public function addLocalWorkerCsv($request)
+    {
+        // Get the uploaded CSV file
+        $file = $request['file'];
+        // Read the CSV file
+        $csv = Reader::createFromPath($file->getPathname(), 'r');
+        $csv->setHeaderOffset(0); // Skip the header row
+        // Iterate over each row in the CSV file
+        foreach ($csv as $record) {
+                // Create a new LocalWorker instance and save it to the database
+                $existingCount = LocalWorker::count();
+                $createLocalWorker = new LocalWorker();
+                $existingCount++;
+                $formattedId = 'L-' . $existingCount;
+                $createLocalWorker->worker_id = $formattedId;
+                $createLocalWorker->timesheet_id = $request['timesheet_id'];
+                $createLocalWorker->first_name = $record['firstname'];
+                $createLocalWorker->last_name = $record['lastname'];
+                $createLocalWorker->save();  
+        }
+        return $this->responseHelper->api_response(null, 200, "success", 'Local Workers added successfully.');
     }
 
     

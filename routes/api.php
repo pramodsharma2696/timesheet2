@@ -53,6 +53,7 @@ Route::group(
                 Route::get('/generate-timesheet-id',[TimeSheetController::class, 'generateTimeSheetId']);
                 Route::get('/refresh-qr/{projectid}',[TimeSheetController::class, 'RefreshQR'])->where('id', '[0-9]+');
                 Route::post('/add-local-worker',[TimeSheetController::class, 'addLocalWorker']);
+                Route::post('/add-local-worker-csv',[TimeSheetController::class, 'addLocalWorkerCsvFile']);
                 Route::post('/invite-worker',[TimeSheetController::class, 'InviteWorker']);
                 Route::post('/update-worker',[TimeSheetController::class, 'UpdateWorker']);
                 Route::get('/all-worker',[TimeSheetController::class, 'showWorkers']);            

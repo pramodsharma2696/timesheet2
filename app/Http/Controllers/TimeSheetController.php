@@ -215,6 +215,17 @@ class TimeSheetController extends Controller
         }
     }
 
+    public function addLocalWorkerCsvFile(Request $request){
+    $validation = $this->responseHelper->api_validate_request($request->all(), config('rules.addLocalWorkercsv'));
+    if ($validation !== false) {
+        $this->timeSheetServices->addLocalWorkerCsv($request->all());
+    }else{
+        return $this->responseHelper->api_response(null,422,"error", $validation);
+    }
+        
+
+    }
+
     
     
 }
