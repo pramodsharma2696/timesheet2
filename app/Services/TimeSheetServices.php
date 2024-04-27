@@ -495,6 +495,33 @@ class TimeSheetServices
         // Return the response
         return $this->responseHelper->api_response($data, 200, "success", 'success.');
     }
+
+    public function getSummaryData($timesheetid)
+    {
+        // Retrieve all workers along with their attendance records
+        $workers = LocalWorker::with(['attendance' => function ($query) use ($timesheetid) {
+            $query->select('worker_id')
+                ->selectRaw('SUM(total_hours) as total_hours')
+                ->selectRaw('SUM(CASE WHEN approve = "1" THEN 1 ELSE 0 END) as total_approve')
+                ->selectRaw('SUM(CASE WHEN approve = "0" THEN 1 ELSE 0 END) as total_disapprove')
+                ->where('timesheet_id', $timesheetid)
+                ->groupBy('worker_id');
+        }])
+        ->get();
+        return $this->responseHelper->api_response($workers, 200, "success", 'success.');
+    }
+    
+    public function getTotalWorkerData($timesheetid)
+    {
+        // Retrieve count of all workers 
+        $workers = LocalWorker::where('timesheet_id',$timesheetid)->count();
+        return $this->responseHelper->api_response(['total_workers'=>$workers], 200, "success", 'success.');
+    }
+
+    
+
+
+    
     
 
     

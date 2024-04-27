@@ -140,6 +140,20 @@ class TimeSheetController extends Controller
             return $this->responseHelper->api_response(null, 422,"error", $e->getMessage());
         }
     }
+    public function getSummaryData($timesheetid){
+        try {
+            $this->timeSheetServices->getSummaryData($timesheetid);
+        } catch (\Exception $e) {
+            return $this->responseHelper->api_response(null, 422,"error", $e->getMessage());
+        }
+    }
+    public function getTotalWorkerData($timesheetid){
+        try {
+            $this->timeSheetServices->getTotalWorkerData($timesheetid);
+        } catch (\Exception $e) {
+            return $this->responseHelper->api_response(null, 422,"error", $e->getMessage());
+        }
+    }
 
 
 
