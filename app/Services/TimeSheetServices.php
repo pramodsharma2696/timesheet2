@@ -392,11 +392,17 @@ class TimeSheetServices
         if ($Attendance->isNotEmpty()) {
             // Update each attendance record to mark as approved
             foreach ($Attendance as $attendance) {
-                $attendance->approve = 1;
-                $attendance->save();
+                if($request['approve'] === '1'){
+                    $attendance->approve = 1;
+                    $attendance->save();
+                }
+                if($request['approve'] === '0'){
+                    $attendance->approve = 0;
+                    $attendance->save();
+                }
             }
             // Return the updated attendance records
-            return $this->responseHelper->api_response($Attendance, 200, "success", 'Success. Attendance approved.');
+            return $this->responseHelper->api_response($Attendance, 200, "success", 'Success.');
         } else {
             // No attendance records found
             return $this->responseHelper->api_response(null, 422, "error", "Attendance does not exist.");
