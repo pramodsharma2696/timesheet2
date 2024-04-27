@@ -58,7 +58,7 @@ Route::group(
                 Route::get('/all-worker',[TimeSheetController::class, 'showWorkers']);            
                 Route::get('/worker/{timesheetid}',[TimeSheetController::class, 'getTimesheetIdBasedWorker']); 
                 Route::get('/worker/{timesheetid}/{date}',[TimeSheetController::class, 'getTimesheetIdAndDateBasedWorker']); 
-                Route::get('/get-in-out-attendance-data/{type}/{startDate}/{endDate}',[TimeSheetController::class, 'getInOutAttendanceData']); 
+                Route::get('/get-in-out-attendance-data/{type}/{timesheet_id}/{startDate}/{endDate}',[TimeSheetController::class, 'getInOutAttendanceData']); 
                 Route::post('/record-attendance',[TimeSheetController::class, 'Attendance']);           
                 Route::post('/approve-attendance',[TimeSheetController::class, 'approveAttendance']);           
                 Route::post('/approve-all-attendance',[TimeSheetController::class, 'approveAllAttendance']);           
