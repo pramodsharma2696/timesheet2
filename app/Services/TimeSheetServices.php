@@ -462,20 +462,14 @@ class TimeSheetServices
     }
 
 
-    public function getInOutAttendanceData($type,$timesheet_id,$startDate, $endDate) {
+    public function getInOutAttendanceData($worker_id,$timesheet_id,$startDate, $endDate) {
         // Parse start and end dates to ensure they're in the correct format
         $startDate = date('Y-m-d', strtotime($startDate));
         $endDate = date('Y-m-d', strtotime($endDate));
     
         // Query the database based on the type
-        if ($type === 'weekly') {
-            $attendances = Attendance::where('timesheet_id',$timesheet_id)->whereBetween('date', [$startDate, $endDate])->get();
-        } elseif ($type === 'monthly') {
-            // Assuming monthly data is fetched based on the entire month
-            $startOfMonth = date('Y-m-01', strtotime($startDate));
-            $endOfMonth = date('Y-m-t', strtotime($endDate));
-            $attendances = Attendance::where('timesheet_id',$timesheet_id)->whereBetween('date', [$startOfMonth, $endOfMonth])->get();
-        }
+        $attendances = Attendance::where('worker_id',$worker_id)->where('timesheet_id',$timesheet_id)->whereBetween('date', [$startDate, $endDate])->get();
+
     
         // Process $attendances to get first inTime and last OutTime
         foreach ($attendances as $attendance) {
