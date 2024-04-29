@@ -461,35 +461,79 @@ class TimeSheetServices
      
     }
 
-
-    public function getInOutAttendanceData($timesheet_id,$worker_id,$startDate, $endDate) {
+    public function getInOutAttendanceData($timesheet_id, $worker_id, $startDate, $endDate) {
         // Parse start and end dates to ensure they're in the correct format
         $startDate = date('Y-m-d', strtotime($startDate));
         $endDate = date('Y-m-d', strtotime($endDate));
     
         // Query the database based on the type
-        $attendances = Attendance::where('worker_id',$worker_id)->where('timesheet_id',$timesheet_id)->whereBetween('date', [$startDate, $endDate])->get();
-
+        $attendances = Attendance::where('worker_id', $worker_id)
+                                 ->where('timesheet_id', $timesheet_id)
+                                 ->whereBetween('date', [$startDate, $endDate])
+                                 ->orderBy('date') // Ensure attendances are ordered by date
+                                 ->get();
     
-        // Process $attendances to get first inTime and last OutTime
-        foreach ($attendances as $attendance) {
-            $attendanceData = json_decode($attendance->attendance, true);
-            if (is_array($attendanceData) && count($attendanceData) > 0) {
-                $firstInTime = $attendanceData[0]['in_time'];
-                $lastOutTime = end($attendanceData)['out_time'];
-                $attendance->first_in_time = $firstInTime;
-                $attendance->last_out_time = $lastOutTime;
+        // Prepare an array to hold the final attendances data
+        $attendancesData = [];
+    
+        // Loop through each date in the range
+        for ($date = $startDate; $date <= $endDate; $date = date('Y-m-d', strtotime($date . ' +1 day'))) {
+            // Check if there is an attendance entry for the current date
+            $attendance = $attendances->firstWhere('date', $date);
+    
+            // If there is no attendance entry for the current date, add an entry with null date
+            if (!$attendance) {
+                $attendancesData[] = [
+                    'id' => null,
+                    'user_id' => null,
+                    'worker_id' => null,
+                    'timesheet_id' => null,
+                    'attendance' => [],
+                    'date' => null,
+                    'approve' => null,
+                    'total_hours' => null,
+                    'created_at' => null,
+                    'updated_at' => null,
+                    'first_in_time' => null,
+                    'last_out_time' => null
+                ];
+            } else {
+                // Process the attendance data to get first inTime and last OutTime
+                $attendanceData = json_decode($attendance->attendance, true);
+                $firstInTime = null;
+                $lastOutTime = null;
+                if (is_array($attendanceData) && count($attendanceData) > 0) {
+                    $firstInTime = $attendanceData[0]['in_time'];
+                    $lastOutTime = end($attendanceData)['out_time'];
+                }
+    
+                // Add the attendance data to the array
+                $attendancesData[] = [
+                    'id' => $attendance->id,
+                    'user_id' => $attendance->user_id,
+                    'worker_id' => $attendance->worker_id,
+                    'timesheet_id' => $attendance->timesheet_id,
+                    'attendance' => $attendanceData,
+                    'date' => $attendance->date,
+                    'approve' => $attendance->approve,
+                    'total_hours' => $attendance->total_hours,
+                    'created_at' => $attendance->created_at,
+                    'updated_at' => $attendance->updated_at,
+                    'first_in_time' => $firstInTime,
+                    'last_out_time' => $lastOutTime
+                ];
             }
         }
     
         // Prepare response data
         $data = [
-            'attendances' => $attendances,
+            'attendances' => $attendancesData,
         ];
-        
+    
         // Return the response
-        return $this->responseHelper->api_response($data, 200, "success", 'success.');
+        return $this->responseHelper->api_response($data, 200, "success", 'Success.');
     }
+    
 
     public function getSummaryData($timesheetid)
     {
