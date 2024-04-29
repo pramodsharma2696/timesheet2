@@ -505,9 +505,9 @@ class TimeSheetServices
                 ->selectRaw('SUM(total_hours) as total_hours')
                 ->selectRaw('SUM(CASE WHEN approve = "1" THEN total_hours ELSE 0 END) as total_hours_approve')
                 ->selectRaw('SUM(CASE WHEN approve = "0" THEN total_hours ELSE 0 END) as total_hours_disapprove')
-                ->where('timesheet_id', $timesheetid)
                 ->groupBy('worker_id');
         }])
+        ->where('timesheet_id', $timesheetid)
         ->get();
         return $this->responseHelper->api_response($workers, 200, "success", 'success.');
     }
