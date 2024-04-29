@@ -462,7 +462,7 @@ class TimeSheetServices
     }
 
 
-    public function getInOutAttendanceData($worker_id,$timesheet_id,$startDate, $endDate) {
+    public function getInOutAttendanceData($timesheet_id,$worker_id,$startDate, $endDate) {
         // Parse start and end dates to ensure they're in the correct format
         $startDate = date('Y-m-d', strtotime($startDate));
         $endDate = date('Y-m-d', strtotime($endDate));
