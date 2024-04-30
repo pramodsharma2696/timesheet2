@@ -274,7 +274,7 @@ class TimeSheetServices
         $formattedDate = Carbon::createFromFormat('d-m-Y', $date)->format('Y-m-d');
         // Retrieve all workers
         $workers = LocalWorker::with(['attendance' => function ($query) use ($formattedDate) {
-            $query->select('id', 'worker_id', 'attendance', 'total_hours', 'date','approve')
+            $query->select('id', 'worker_id', 'attendance', 'total_hours', 'date','approve','assigned_task_hours')
                 ->whereDate('date', $formattedDate);
         }])
             ->where('timesheet_id', $timesheetid)
