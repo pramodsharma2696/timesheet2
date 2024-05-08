@@ -19,7 +19,7 @@ return new class extends Migration
             $table->json('attendance')->nullable();
             $table->json('assigned_task_hours')->nullable();
             $table->date('date');
-            $table->enum('approve',[0, 1])->default(0)->comment('0:disapprove, 1:approve');
+            $table->enum('approve',[0, 1])->nullable()->comment('0:disapprove, 1:approve');
             $table->integer('total_hours')->nullable();
             $table->timestamps();
         });
