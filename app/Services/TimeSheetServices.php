@@ -579,6 +579,112 @@ class TimeSheetServices
         return $this->responseHelper->api_response(null, 200, "success", 'Local Workers added successfully.');
     }
 
+    public function getDailyWeeklyWorkerTotalHrs($workerId, $timesheetId, $month, $year){
+    // Retrieve the attendance records for the specified worker, timesheet, month, and year
+    $monthChecked = is_numeric($month) ? intval($month) : Carbon::parse($month)->format('m');
+    $attendances = Attendance::where('worker_id', $workerId)
+                    ->where('timesheet_id', $timesheetId)
+                    ->whereYear('date', $year)
+                    ->whereMonth('date', $monthChecked)
+                    ->get();
+    
+    // Initialize variables to store daily and weekly working hours
+    $dailyWorkingHours = [];
+    $weeklyWorkingHours = [];
+    $approveStatus = [];
+    
+    // Get the first and last day of the month
+    $firstDayOfMonth = Carbon::createFromDate($year, $monthChecked, 1);
+    $lastDayOfMonth = Carbon::createFromDate($year, $monthChecked, 1)->endOfMonth();
+    
+    // Iterate through each day in the month
+    for ($date = $firstDayOfMonth; $date <= $lastDayOfMonth; $date->addDay()) {
+        $dateString = $date->toDateString();
+        
+        // Set default working hours to null
+        $dailyWorkingHours[$dateString] = null;
+        $approveStatus[$dateString] = null;
+        
+        // Check if there is attendance data for the current date
+        foreach ($attendances as $attendance) {
+            if (Carbon::parse($attendance->date)->toDateString() === $dateString) {
+                // Decode the JSON data from the attendance column
+                $attendanceData = json_decode($attendance->attendance, true);
+                
+                // Initialize total working hours for the current date
+                $totalWorkingHours = 0;
+                
+                // Iterate through each in/out record and calculate total working hours
+                foreach ($attendanceData as $record) {
+                    // Assuming the JSON structure contains 'in_time' and 'out_time'
+                    $inTime = Carbon::parse($record['in_time']);
+                    $outTime = Carbon::parse($record['out_time']);
+                    
+                    // Calculate working hours for the current record
+                    $workingHours = $outTime->diffInHours($inTime);
+                    
+                    // Add working hours to the total
+                    $totalWorkingHours += $workingHours;
+                }
+                
+                // Set total working hours for the current date
+                $dailyWorkingHours[$dateString] = $totalWorkingHours;
+                $approveStatus[$dateString] = $attendance->approve;
+            }
+        }
+    }
+    
+    // Calculate weekly working hours (Monday to Saturday) for each week in the month
+    $currentWeekStart = $firstDayOfMonth->copy()->startOfWeek();
+    $currentWeekEnd = $currentWeekStart->copy()->endOfWeek();
+    $currentWeekTotalHours = 0;
+    
+    foreach ($dailyWorkingHours as $date => $hours) {
+        $currentDate = Carbon::parse($date);
+        
+        // Check if the current date is within the current week
+        if ($currentDate->gte($currentWeekStart) && $currentDate->lte($currentWeekEnd)) {
+            if (!is_null($hours)) {
+                $currentWeekTotalHours += $hours;
+            }
+        } else {
+            // Store the total hours for the previous week
+            $weeklyWorkingHours[$currentWeekStart->toDateString()] = $currentWeekTotalHours;
+            
+            // Move to the next week
+            $currentWeekStart->addWeek();
+            $currentWeekEnd->addWeek();
+            
+            // Reset total hours for the new week
+            $currentWeekTotalHours = 0;
+            
+            // Check if the current date is within the current week
+            if ($currentDate->gte($currentWeekStart) && $currentDate->lte($currentWeekEnd)) {
+                if (!is_null($hours)) {
+                    $currentWeekTotalHours += $hours;
+                }
+            }
+        }
+    }
+    
+    // Store the total hours for the last week
+    $weeklyWorkingHours[$currentWeekStart->toDateString()] = $currentWeekTotalHours;
+    
+    // Return the response data
+    $data = [
+        'worker_id' => $workerId,
+        'timesheet_id' => $timesheetId,
+        'month' => $monthChecked,
+        'year' => $year,
+        'daily_working_hours' => $dailyWorkingHours,
+        'weekly_working_hours' => $weeklyWorkingHours,
+        'approve_status' => $approveStatus,
+    ];
+    
+    return $this->responseHelper->api_response($data, 200, "success", 'success.');
+}
+    
+
     
 
 

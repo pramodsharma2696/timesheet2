@@ -222,8 +222,14 @@ class TimeSheetController extends Controller
     }else{
         return $this->responseHelper->api_response(null,422,"error", $validation);
     }
-        
+    }
 
+    public function getDailyWeeklyWorkerTotalHrs($workerid, $timesheetid, $month, $year){
+        try {
+            $this->timeSheetServices->getDailyWeeklyWorkerTotalHrs($workerid, $timesheetid, $month, $year);
+        }catch(\Exception $e){
+            return $this->responseHelper->api_response(null, 422,"error", $e->getMessage());
+        }
     }
 
     

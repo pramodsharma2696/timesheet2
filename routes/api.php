@@ -66,6 +66,7 @@ Route::group(
                 Route::post('/assign-task-hours',[TimeSheetController::class, 'assignTaskHours']);     
                 Route::get('/get-summary-data/{timesheetid}',[TimeSheetController::class, 'getSummaryData']); 
                 Route::get('/get-total-worker/{timesheetid}',[TimeSheetController::class, 'getTotalWorkerData']); 
+                Route::get('/daily-weekly-worker-total-hrs/{workerid}/{timesheetid}/{month}/{year}',[TimeSheetController::class, 'getDailyWeeklyWorkerTotalHrs']); 
             });
     }
 );
