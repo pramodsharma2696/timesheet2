@@ -579,7 +579,7 @@ class TimeSheetServices
         return $this->responseHelper->api_response(null, 200, "success", 'Local Workers added successfully.');
     }
 
-    public function getDailyWeeklyWorkerTotalHrs($workerId, $timesheetId, $month, $year){
+public function getDailyWeeklyWorkerTotalHrs($workerId, $timesheetId, $month, $year){
     // Retrieve the attendance records for the specified worker, timesheet, month, and year
     $monthChecked = is_numeric($month) ? intval($month) : Carbon::parse($month)->format('m');
     $attendances = Attendance::where('worker_id', $workerId)
@@ -590,7 +590,6 @@ class TimeSheetServices
     
     // Initialize variables to store daily and weekly working hours
     $dailyWorkingHours = [];
-    $weeklyWorkingHours = [];
     $approveStatus = [];
     
     // Get the first and last day of the month
@@ -634,41 +633,21 @@ class TimeSheetServices
         }
     }
     
-    // Calculate weekly working hours (Monday to Saturday) for each week in the month
-    $currentWeekStart = $firstDayOfMonth->copy()->startOfWeek();
-    $currentWeekEnd = $currentWeekStart->copy()->endOfWeek();
-    $currentWeekTotalHours = 0;
-    
+    // Initialize weekly working hours array
+    $weeklyWorkingHours = [];
+
+    // Calculate weekly working hours
     foreach ($dailyWorkingHours as $date => $hours) {
-        $currentDate = Carbon::parse($date);
+        $weekStartDate = Carbon::parse($date)->startOfWeek()->toDateString();
         
-        // Check if the current date is within the current week
-        if ($currentDate->gte($currentWeekStart) && $currentDate->lte($currentWeekEnd)) {
-            if (!is_null($hours)) {
-                $currentWeekTotalHours += $hours;
-            }
-        } else {
-            // Store the total hours for the previous week
-            $weeklyWorkingHours[$currentWeekStart->toDateString()] = $currentWeekTotalHours;
-            
-            // Move to the next week
-            $currentWeekStart->addWeek();
-            $currentWeekEnd->addWeek();
-            
-            // Reset total hours for the new week
-            $currentWeekTotalHours = 0;
-            
-            // Check if the current date is within the current week
-            if ($currentDate->gte($currentWeekStart) && $currentDate->lte($currentWeekEnd)) {
-                if (!is_null($hours)) {
-                    $currentWeekTotalHours += $hours;
-                }
-            }
+        if (!isset($weeklyWorkingHours[$weekStartDate])) {
+            $weeklyWorkingHours[$weekStartDate] = 0;
+        }
+        
+        if (!is_null($hours)) {
+            $weeklyWorkingHours[$weekStartDate] += $hours;
         }
     }
-    
-    // Store the total hours for the last week
-    $weeklyWorkingHours[$currentWeekStart->toDateString()] = $currentWeekTotalHours;
     
     // Return the response data
     $data = [
@@ -683,6 +662,8 @@ class TimeSheetServices
     
     return $this->responseHelper->api_response($data, 200, "success", 'success.');
 }
+
+
     
 
     
