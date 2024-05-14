@@ -232,6 +232,23 @@ class TimeSheetController extends Controller
         }
     }
 
+    public function assignTaskAdd(Request $request){
+        $validation = $this->responseHelper->api_validate_request($request->all(), config('rules.assignTaskAdd'));
+        if ($validation !== false) {
+            $this->timeSheetServices->assignTaskAdd($request->all());
+        }else{
+            return $this->responseHelper->api_response(null,422,"error", $validation);
+        }
+    }
+    public function updateAssignTaskCheckbox(Request $request){
+        $validation = $this->responseHelper->api_validate_request($request->all(), config('rules.updateAssignTaskCheckbox'));
+        if ($validation !== false) {
+            $this->timeSheetServices->updateAssignTaskCheckbox($request->all());
+        }else{
+            return $this->responseHelper->api_response(null,422,"error", $validation);
+        }
+    }
+
     
     
 }

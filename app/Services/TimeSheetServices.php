@@ -664,6 +664,37 @@ public function getDailyWeeklyWorkerTotalHrs($workerId, $timesheetId, $month, $y
 }
 
 
+public function assignTaskAdd($request){
+    //dd($request);
+    $attendances = Attendance::where('worker_id', $request['worker_id'])
+                    ->where('timesheet_id', $request['timesheet_id'])
+                    ->whereDate('date', $request['date'])
+                    ->first();
+    if(!empty($attendances)){
+        $attendances->total_hours = $request['total_hours'];
+        $attendances->save();
+        return $this->responseHelper->api_response($attendances, 200, "success", 'success.');
+    }else{
+        return $this->responseHelper->api_response(null, 422, "error", "Worker does not exist.");
+    }
+}
+
+public function updateAssignTaskCheckbox($request){
+    $timeSheet = TimeSheet::where('timesheet_id', $request['timesheet_id'])->first();
+    if(!empty($timeSheet)){
+        if($timeSheet->assign_task === '1'){
+            $timeSheet->assign_task = '0';
+        }else{
+            $timeSheet->assign_task = '1';
+        }
+        $timeSheet->save();
+        return $this->responseHelper->api_response($timeSheet, 200, "success", 'success.');
+    }else{
+        return $this->responseHelper->api_response(null, 422, "error", "something went wrong.");
+    }
+}
+
+
     
 
     

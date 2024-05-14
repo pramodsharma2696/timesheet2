@@ -23,6 +23,15 @@ return [
         'worker_id' => 'required',
         'timesheet_id' => 'required'
     ],
+    'assignTaskAdd' => [
+        'worker_id' => 'required',
+        'timesheet_id' => 'required',
+        'date' => 'required',
+        'total_hours' => 'required',
+    ],
+    'updateAssignTaskCheckbox' => [
+        'timesheet_id' => 'required',
+    ],
     'approveAttendance' => [
         'attendance_id' => 'required',
         'approve' => 'required'
