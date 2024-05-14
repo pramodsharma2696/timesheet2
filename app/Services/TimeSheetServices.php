@@ -293,7 +293,7 @@ class TimeSheetServices
         // Find the worker and timesheet
         $worker = LocalWorker::find($request['worker_id']);
         $timesheet = TimeSheet::where('timesheet_id', $request['timesheet_id'])->first();
-
+       
         // Check if the worker and timesheet exist
         if (!$worker) {
             return $this->responseHelper->api_response(null, 422, "error", "Worker does not exist.");
@@ -302,10 +302,11 @@ class TimeSheetServices
         if (!$timesheet) {
             return $this->responseHelper->api_response(null, 422, "error", "Timesheet does not exist.");
         }
-
-        // Convert time from 12-hour format to 24-hour format and validate
         $timeEntries = [];
         $totalHours = 0;
+         // Check if we need to calculate hours based on the timesheet's calculate_hours column
+    if ($timesheet->hours === '1') {
+        // Convert time from 12-hour format to 24-hour format and validate
         for ($i = 1; $i <= 3; $i++) {
             $inTime = $request['in_time' . $i];
             $outTime = $request['out_time' . $i];
@@ -341,6 +342,9 @@ class TimeSheetServices
 
         // Round total hours to two decimal places
         $totalHours = round($totalHours, 2);
+    }else{
+        $totalHours = 0;
+    }
 
         // Check if the attendance ID is provided for updating
         if (!empty($request['attendance_id'])) {
@@ -426,14 +430,24 @@ class TimeSheetServices
          return $this->responseHelper->api_response(null, 422, "error", "Timesheet does not exist.");
      }
 
+     $assignTaskHoursJson = json_encode([]);
+     $totalHours = 0;
+
      // Convert the assign_task_hours array to JSON
-    $assignTaskHoursJson = json_encode($request['assign_task_hours']);
+     if ($timesheet->hours === '1') {
+        $totalHours = 0;
+     }else{
+        $assignTaskHoursJson = json_encode($request['assign_task_hours']);
     
-    // Validate that combined hours do not exceed 24
-    $totalHours = array_sum($request['assign_task_hours']);
-    if ($totalHours > 24) {
-        return $this->responseHelper->api_response(null, 422, "error", "Total hours cannot exceed 24.");
-    }
+        // Validate that combined hours do not exceed 24
+        $totalHours = array_sum($request['assign_task_hours']);
+        if ($totalHours > 24) {
+            return $this->responseHelper->api_response(null, 422, "error", "Total hours cannot exceed 24.");
+        }
+     }
+   
+
+
     $formattedDate = Carbon::createFromFormat('d-m-Y', $request['date'])->format('Y-m-d');
     $attendance = Attendance::where('worker_id',$worker->id)->where('timesheet_id',$timesheet->timesheet_id)->whereDate('date', $formattedDate)->first();
     if(!is_null($attendance)){
@@ -675,7 +689,16 @@ public function assignTaskAdd($request){
         $attendances->save();
         return $this->responseHelper->api_response($attendances, 200, "success", 'success.');
     }else{
-        return $this->responseHelper->api_response(null, 422, "error", "Worker does not exist.");
+        $formattedDate = Carbon::createFromFormat('d-m-Y', $request['date'])->format('Y-m-d');
+        $attendance = new Attendance();
+        $attendance->user_id = auth()->user()->id;
+        $attendance->worker_id = $request['worker_id'];
+        $attendance->timesheet_id = $request['timesheet_id'];
+        $attendance->date = $formattedDate;
+        $attendance->save();
+        $attendanceData = Attendance::where('worker_id',$attendance->worker_id)->where('timesheet_id',$attendance->timesheet_id)->whereDate('date', $formattedDate)->first();
+        return $this->responseHelper->api_response($attendanceData, 200, "success", 'success.');
+        //return $this->responseHelper->api_response(null, 422, "error", "Worker does not exist.");
     }
 }
 
