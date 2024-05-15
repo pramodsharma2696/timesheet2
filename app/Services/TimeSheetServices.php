@@ -430,15 +430,17 @@ class TimeSheetServices
          return $this->responseHelper->api_response(null, 422, "error", "Timesheet does not exist.");
      }
 
+     $formattedDate = Carbon::createFromFormat('d-m-Y', $request['date'])->format('Y-m-d');
+     $attendance = Attendance::where('worker_id',$worker->id)->where('timesheet_id',$timesheet->timesheet_id)->whereDate('date', $formattedDate)->first();
+
      $assignTaskHoursJson = json_encode([]);
      $totalHours = 0;
-
+     if(!is_null($attendance->total_hours)){
+        $totalHours = $attendance->total_hours;
+     }
      // Convert the assign_task_hours array to JSON
-     if ($timesheet->hours === '1') {
-        $totalHours = 0;
-     }else{
+     if ($timesheet->hours === '0') {
         $assignTaskHoursJson = json_encode($request['assign_task_hours']);
-    
         // Validate that combined hours do not exceed 24
         $totalHours = array_sum($request['assign_task_hours']);
         if ($totalHours > 24) {
@@ -448,15 +450,15 @@ class TimeSheetServices
    
 
 
-    $formattedDate = Carbon::createFromFormat('d-m-Y', $request['date'])->format('Y-m-d');
-    $attendance = Attendance::where('worker_id',$worker->id)->where('timesheet_id',$timesheet->timesheet_id)->whereDate('date', $formattedDate)->first();
+   
     if(!is_null($attendance)){
         // Update attendance record
         $attendance->user_id = auth()->user()->id;
         $attendance->worker_id = $worker->id;
         $attendance->timesheet_id = $timesheet->timesheet_id;
         $attendance->assigned_task_hours = $assignTaskHoursJson;
-        $attendance->date = Carbon::now();
+        $attendance->date = $formattedDate;
+        $attendance->total_hours = $totalHours;
         $attendance->save();
      $attendanceData = Attendance::where('worker_id',$attendance->worker_id)->where('timesheet_id',$attendance->timesheet_id)->whereDate('date', $formattedDate)->first();
         return $this->responseHelper->api_response($attendanceData, 200, "success", 'Task hours assigned successfully.');
@@ -467,7 +469,8 @@ class TimeSheetServices
      $attendance->worker_id = $worker->id;
      $attendance->timesheet_id = $timesheet->timesheet_id;
      $attendance->assigned_task_hours = $assignTaskHoursJson;
-     $attendance->date = Carbon::now();
+     $attendance->date = $formattedDate;
+     $attendance->total_hours = $totalHours;
      $attendance->save();
      $attendanceData = Attendance::where('worker_id',$attendance->worker_id)->where('timesheet_id',$attendance->timesheet_id)->whereDate('date', $formattedDate)->first();
      return $this->responseHelper->api_response($attendanceData, 200, "success", 'Task hours assigned successfully.');
