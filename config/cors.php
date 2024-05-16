@@ -10,22 +10,22 @@
 //     'supports_credentials' => false,
 // ];
 
-return [
+    return [
 
-    'paths' => ['api/*', 'sanctum/csrf-cookie'],
+        'paths' => ['api/*', 'sanctum/csrf-cookie'],
 
-    'allowed_methods' => ['*'],
+        'allowed_methods' => ['*'],
 
-    'allowed_origins' => ['https://rapisurv2-k6dl.vercel.app'],
+        'allowed_origins' => ['https://rapisurv2-k6dl.vercel.app','https://qa-timesheet.rapisurv.com'],
 
-    'allowed_origins_patterns' => [],
+        'allowed_origins_patterns' => [],
 
-    'allowed_headers' => ['*'],
+        'allowed_headers' => ['*'],
 
-    'exposed_headers' => false,
+        'exposed_headers' => false,
 
-    'max_age' => false,
+        'max_age' => false,
 
-    'supports_credentials' => false,
+        'supports_credentials' => false,
 
-];
+    ];
