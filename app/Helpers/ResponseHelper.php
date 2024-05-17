@@ -19,6 +19,7 @@ class ResponseHelper {
             if ($getString === true) {
                     return json_encode($data_array);
             }
+            $this->addCorsHeaders();
             response()->json($data_array, $code, $headers)->send();
             die();
     }
@@ -95,6 +96,30 @@ public function GenerateRefreshQR($projectData){
     //     }
     // }
 
+    public function addCorsHeaders(){
+        $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
+
+        if (!$origin) {
+            $referer = $_SERVER['HTTP_REFERER'] ?? '';
+        
+            if ($referer) {
+                $parsedUrl = parse_url($referer);
+                $origin = $parsedUrl['scheme'] . '://' . $parsedUrl['host'];
+                if (isset($parsedUrl['port'])) {
+                    $origin .= ':' . $parsedUrl['port'];
+                }
+                $origin = rtrim($origin, '/');
+            } else {
+                $origin = '*';
+            }
+        }
+        
+        header('Access-Control-Allow-Origin: ' . $origin);
+        header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
+        header('Access-Control-Allow-Credentials: true');
+        header('Access-Control-Allow-Headers: X-Requested-With,Content-Type,X-Token-Auth,Authorization');
+        header('Accept: application/json');
+    }
 
 }
 
