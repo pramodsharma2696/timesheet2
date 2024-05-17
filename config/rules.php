@@ -3,7 +3,7 @@
 return [
     'validate_createTimesheet' => [
         'start_date' => 'required',
-        'projectid' => 'required',
+        // 'projectid' => 'required',
     ],
     'validate_updateTimesheet' => [
         'timesheetid' => 'required'

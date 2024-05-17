@@ -29,40 +29,36 @@ class TimeSheetServices
         } else {
             $end_date = null;
         }
-        if ($end_date < $start_date) {
-            return $this->responseHelper->api_response(null, 422, "error", "End date must be after the start date");
-        } else {
-            $createTimesheet = new TimeSheet();
-            $createTimesheet->user_id = $userid;
-            $createTimesheet->timesheet_id = $request['timesheet_id'];
-            $createTimesheet->project_id = $request['projectid'];
-            $createTimesheet->start_date = $start_date;
-            $createTimesheet->end_date = $end_date;
-            $createTimesheet->status = $request['status'];
-            $createTimesheet->localwork = $request['localwork'];
-            $createTimesheet->scanning = $request['scanning'];
-            $createTimesheet->hours = $request['hours'];
-            if (isset($request['break']) && $request['break'] == 1) {
-                $createTimesheet->break = $request['break'];
-                $createTimesheet->break_duration = $request['break_duration'];
-                $createTimesheet->break_duration_type = $request['break_duration_type'];
-            }
-            $assignAdminData = collect($request['assign_admin'])->map(function ($adminData) {
-                return [
-                    'admin_id' => $adminData['admin_id'],
-                    'role' => json_encode([
-                        'manage_time' => $adminData['manage_time'],
-                        'manage_worker' => $adminData['manage_worker']
-                    ])
-                ];
-            })->toJson();
-
-            $createTimesheet->assign_admin = $assignAdminData;
-            $createTimesheet->timesheet_qr = $this->generateQR($request['projectid']);
-            $createTimesheet->save();
-            $timesheetData = TimeSheet::with('project')->where('id', $createTimesheet->id)->first();
-            return $this->responseHelper->api_response($timesheetData, 200, "success", 'Timesheet created.');
+        $createTimesheet = new TimeSheet();
+        $createTimesheet->user_id = $userid;
+        $createTimesheet->timesheet_id = $request['timesheet_id'];
+        $createTimesheet->project_id = $request['projectid'];
+        $createTimesheet->start_date = $start_date;
+        $createTimesheet->end_date = $end_date;
+        $createTimesheet->status = $request['status'];
+        $createTimesheet->localwork = $request['localwork'];
+        $createTimesheet->scanning = $request['scanning'];
+        $createTimesheet->hours = $request['hours'];
+        if (isset($request['break']) && $request['break'] == 1) {
+            $createTimesheet->break = $request['break'];
+            $createTimesheet->break_duration = $request['break_duration'];
+            $createTimesheet->break_duration_type = $request['break_duration_type'];
         }
+        $assignAdminData = collect($request['assign_admin'])->map(function ($adminData) {
+            return [
+                'admin_id' => $adminData['admin_id'],
+                'role' => json_encode([
+                    'manage_time' => $adminData['manage_time'],
+                    'manage_worker' => $adminData['manage_worker']
+                ])
+            ];
+        })->toJson();
+
+        $createTimesheet->assign_admin = $assignAdminData;
+        $createTimesheet->timesheet_qr = $this->generateQR($request['projectid']);
+        $createTimesheet->save();
+        $timesheetData = TimeSheet::with('project')->where('id', $createTimesheet->id)->first();
+        return $this->responseHelper->api_response($timesheetData, 200, "success", 'Timesheet created.');
     }
 
 
