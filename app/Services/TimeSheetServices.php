@@ -724,7 +724,17 @@ public function updateAssignTaskCheckbox($request){
 }
 
 
+
+public function checkLocalWorderExist($timesheet_id)
+{
+    $localWorkerExistOnThisTimesheet = LocalWorker::where('timesheet_id', $timesheet_id)->exists();
     
+    if ($localWorkerExistOnThisTimesheet) {
+        return $this->responseHelper->api_response(true, 200, "success", 'success.');
+    } else {
+        return $this->responseHelper->api_response(false, 422, "error", "error.");
+    }
+}
 
     
 

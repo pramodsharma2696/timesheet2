@@ -47,6 +47,13 @@ class TimeSheetController extends Controller
             return $this->responseHelper->api_response(null, 422,"error", $e->getMessage());
         }
     }
+    public function CheckLocalWorderExist($id){
+        try {
+            $this->timeSheetServices->checkLocalWorderExist($id);
+        } catch (\Exception $e) {
+            return $this->responseHelper->api_response(null, 422,"error", $e->getMessage());
+        }
+    }
     public function showAllTimeSheet(){
         try {
             $this->timeSheetServices->showallTimesheet();
