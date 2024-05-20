@@ -13,19 +13,12 @@
     return [
 
         'paths' => ['api/*', 'sanctum/csrf-cookie'],
-
         'allowed_methods' => ['*'],
-
         'allowed_origins' => ['https://rapisurv2-k6dl.vercel.app','https://qa-timesheet.rapisurv.com'],
-
         'allowed_origins_patterns' => [],
-
         'allowed_headers' => ['*'],
-
         'exposed_headers' => false,
-
         'max_age' => false,
-
         'supports_credentials' => false,
 
     ];
