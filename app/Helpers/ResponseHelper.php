@@ -21,7 +21,7 @@ class ResponseHelper {
             }
             $this->addCorsHeaders();
             response()->json($data_array, $code, $headers)->send();
-            die();
+           // die();
     }
     public function api_validate_request($input = [], $rule = [], $msg = [])
     {
