@@ -85,8 +85,8 @@ class TimeSheetServices
                 $timesheetData->localwork = $request['localwork'];
                 $timesheetData->scanning = $request['scanning'];
                 $timesheetData->hours = $request['hours'];
+                $timesheetData->break = $request['break'];
                 if (isset($request['break']) && $request['break'] == 1) {
-                    $timesheetData->break = $request['break'];
                     $timesheetData->break_duration = $request['break_duration'];
                     $timesheetData->break_duration_type = $request['break_duration_type'];
                 }
