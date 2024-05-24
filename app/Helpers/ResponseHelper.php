@@ -153,7 +153,7 @@ class ResponseHelper {
 
 
     public function GenerateWorkerQR($request,$workerCode){
-        $qrCodeContent = 'Worker ID: ' . $workerCode. ', Name : ' .$request['firstname'].' '.$request['lastname'].', Location: '.$request['country'];
+        $qrCodeContent = 'Worker ID: ' . $workerCode. ', Name : ' .$request['firstname'].' '.$request['lastname'];
         $qrfile = 'worker_'.$workerCode.'_qrcode.png';
         $errorCorrectionLevel = 'L';
         $matrixPointSize = 10;
