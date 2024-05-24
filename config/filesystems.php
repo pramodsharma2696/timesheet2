@@ -55,6 +55,12 @@ return [
             'url' => env('APP_URL').'/storage/REFRESHQRCODE',
             'visibility' => 'public',
         ],
+        'public_worker_qrcodes' => [
+            'driver' => 'local',
+            'root'   => storage_path('app/public') . '/WORKERQRCODE',
+            'url' => env('APP_URL').'/storage/WORKERQRCODE',
+            'visibility' => 'public',
+        ],
 
         's3' => [
             'driver' => 's3',

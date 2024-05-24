@@ -52,4 +52,10 @@ return [
         'first_name' => 'required',
         'last_name' => 'required',
     ],
+    'makeUniversalWorker' => [
+        'firstname' => 'required',
+        'lastname' => 'required',
+        'email' => 'required',
+        'country' => 'required'
+    ],
 ];

@@ -2,11 +2,16 @@
 
 namespace App\Helpers;
 
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Facades\Storage;
+use League\ISO3166\ISO3166;
 use App\Classes\SimpleQR;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Validator;
 
 class ResponseHelper {
+    function __construct()
+    {
+        $this->iso3166 = new ISO3166();
+    }
 
     public function api_response($data = [], $code = '', $type = '', $message = '', $headers = [], $getString = false)
     {
@@ -52,7 +57,7 @@ class ResponseHelper {
 //         \QRcode::png($qrCodeContent, $qrfilename, $errorCorrectionLevel, $matrixPointSize, 2);
 //         return $qrfile;
 //     }
-public function GenerateRefreshQR($projectData){
+    public function GenerateRefreshQR($projectData){
         $qrCodeContent = 'Project ID: ' . $projectData->id . ', Project Desr: ' . $projectData->desr;
         $qrfile = 'project_'.$projectData->id.'_qrcode.png';
         $errorCorrectionLevel = 'L';
@@ -61,6 +66,7 @@ public function GenerateRefreshQR($projectData){
         \QRcode::png($qrCodeContent, $qrfilename, $errorCorrectionLevel, $matrixPointSize, 2);
         return Storage::disk('public_refresh_qrcodes')->url($qrfile);
     }
+   
     
 
      // public function generateQR($projectId){
@@ -119,6 +125,41 @@ public function GenerateRefreshQR($projectData){
         header('Access-Control-Allow-Credentials: true');
         header('Access-Control-Allow-Headers: X-Requested-With,Content-Type,X-Token-Auth,Authorization');
         header('Accept: application/json');
+    }
+
+
+    function generateAlphanumericString($length = 7) {
+        $characters = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        $charactersLength = strlen($characters);
+        $randomString = '';
+        for ($i = 0; $i < $length; $i++) {
+            $randomString .= $characters[rand(0, $charactersLength - 1)];
+        }
+        return $randomString;
+    }
+
+    function getCountryCodeByName($countryName)
+    {
+        $countries = $this->iso3166->all(); // This will get the array of all countries
+
+        foreach ($countries as $country) {
+            if (strcasecmp($country['name'], $countryName) == 0) {
+                return $country['alpha2'];
+            }
+        }
+
+        return 'NaN'; // Return NaN if the country is not found
+    }
+
+
+    public function GenerateWorkerQR($request,$workerCode){
+        $qrCodeContent = 'Worker ID: ' . $workerCode. ', Name : ' .$request['firstname'].' '.$request['lastname'].', Location: '.$request['country'];
+        $qrfile = 'worker_'.$workerCode.'_qrcode.png';
+        $errorCorrectionLevel = 'L';
+        $matrixPointSize = 10;
+        $qrfilename = Storage::disk('public_worker_qrcodes')->path($qrfile);
+        \QRcode::png($qrCodeContent, $qrfilename, $errorCorrectionLevel, $matrixPointSize, 2);
+        return Storage::disk('public_worker_qrcodes')->url($qrfile);
     }
 
 }

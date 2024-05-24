@@ -70,6 +70,7 @@ Route::group(
                 Route::get('/check-local-worker-exist/{timesheetid}',[TimeSheetController::class, 'CheckLocalWorderExist']); 
                 Route::post('/assign-task-add',[TimeSheetController::class, 'assignTaskAdd']); 
                 Route::post('/update-assign-task-checkbox',[TimeSheetController::class, 'updateAssignTaskCheckbox']); 
+                Route::post('/make-universal-worker',[TimeSheetController::class, 'MakeUniversalWorker']); 
             });
     }
 );

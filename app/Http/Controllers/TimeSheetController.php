@@ -47,9 +47,9 @@ class TimeSheetController extends Controller
             return $this->responseHelper->api_response(null, 422,"error", $e->getMessage());
         }
     }
-    public function CheckLocalWorderExist($id){
+    public function CheckLocalWorkerExist($id){
         try {
-            $this->timeSheetServices->checkLocalWorderExist($id);
+            $this->timeSheetServices->checkLocalWorkerExist($id);
         } catch (\Exception $e) {
             return $this->responseHelper->api_response(null, 422,"error", $e->getMessage());
         }
@@ -251,6 +251,14 @@ class TimeSheetController extends Controller
         $validation = $this->responseHelper->api_validate_request($request->all(), config('rules.updateAssignTaskCheckbox'));
         if ($validation !== false) {
             $this->timeSheetServices->updateAssignTaskCheckbox($request->all());
+        }else{
+            return $this->responseHelper->api_response(null,422,"error", $validation);
+        }
+    }
+    public function MakeUniversalWorker(Request $request){
+        $validation = $this->responseHelper->api_validate_request($request->all(), config('rules.makeUniversalWorker'));
+        if ($validation !== false) {
+            $this->timeSheetServices->makeUniversalWorker($request->all());
         }else{
             return $this->responseHelper->api_response(null,422,"error", $validation);
         }
