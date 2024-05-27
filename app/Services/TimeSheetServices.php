@@ -113,14 +113,18 @@ class TimeSheetServices
         } else {
             $newStartDate = date('Y-m-d', strtotime($request['start_date']));
             $newEndDate = isset($request['end_date']) && !empty($request['end_date']) ? date('Y-m-d', strtotime($request['end_date'])) : null;
+
+            $firstAattendanceDate = Attendance::where('timesheet_id',$timesheetData->timesheet_id)->orderBy('date','asc')->first();
+            $lastAttendanceDate = Attendance::where('timesheet_id',$timesheetData->timesheet_id)->orderBy('date','desc')->first();
+
     
             // Check if the new start date is greater than the existing start date
-            if ($newStartDate > $timesheetData->start_date) {
+            if ($newStartDate > $firstAattendanceDate->date) {
                 return $this->responseHelper->api_response(null, 422, "error", "Start date cannot be changed to a later date.");
             }
     
             // Check if the new end date is less than the existing end date
-            if (!is_null($newEndDate) && $newEndDate < $timesheetData->end_date) {
+            if (!is_null($newEndDate) && $newEndDate < $lastAttendanceDate->date) {
                 return $this->responseHelper->api_response(null, 422, "error", "End date cannot be changed to an earlier date.");
             }
     
@@ -356,21 +360,86 @@ class TimeSheetServices
     
         $timeEntries = [];
         $totalHours = 0;
-        $subtotalHours = 0;
         $mainHours = 0;
     
+        
+
+        
+
         // Check if we need to calculate hours based on the timesheet's calculate_hours column
         if ($timesheet->hours === '1') {
             // Convert time from 12-hour format to 24-hour format and validate
+                for ($i = 1; $i <= 3; $i++) {
+                    $inTime = $request['in_time' . $i];
+                    $outTime = $request['out_time' . $i];
+
+                    // Skip conversion and validation if both in and out times are empty
+                    if (empty($inTime) && empty($outTime)) {
+                        continue;
+                    }
+
+                    // If both in and out times are provided together or only one is provided, add them to the timeEntries array
+                    if (!empty($inTime) || !empty($outTime)) {
+                        // If only one of in time or out time is provided, set it to null
+                        if (empty($inTime)) {
+                            $inTime = null;
+                        }
+                        if (empty($outTime)) {
+                            $outTime = null;
+                        }
+                        $timeEntries[] = [
+                            'in_time' => $inTime,
+                            'out_time' => $outTime
+                        ];
+
+                        // Calculate difference in hours if both in and out times are provided
+                        if (!is_null($inTime) && !is_null($outTime)) {
+                            $inTimeObj = Carbon::createFromFormat('h:i A', $inTime);
+                            $outTimeObj = Carbon::createFromFormat('h:i A', $outTime);
+                            $differenceInMinutes = $outTimeObj->diffInMinutes($inTimeObj);
+                            $totalHours += $differenceInMinutes / 60; // Convert minutes to hours
+                        }
+                    }
+                }
+
+                // Round total hours to two decimal places
+                $totalHours = round($totalHours, 2);
+                $mainHours = $totalHours;
+
+                // Deduct break duration if set
+                $breakTotal = 0;
+                if ($timesheet->break === '1' && isset($timesheet->break_duration) && isset($timesheet->break_duration_type)) {
+                    // Convert break duration to hours based on break_duration_type
+                    switch ($timesheet->break_duration_type) {
+                        case 'minutes':
+                            $breakTotal = $timesheet->break_duration / 60;
+                            break;
+                        case 'hours':
+                            $breakTotal = $timesheet->break_duration;
+                            break;
+                        default:
+                            $breakTotal = 0; // Set to 0 if the type is unknown
+                            break;
+                    }
+                    // Check if breakTotal is more than totalHours
+                    if ($breakTotal > $totalHours) {
+                        return $this->responseHelper->api_response(null, 422, "error", "Break duration cannot be more than total working hours.");
+                    }
+            
+                    $totalHours -= $breakTotal;
+                    $totalHours = max($totalHours, 0); // Ensure total hours is not negative
+                }
+            
+        }else{
             for ($i = 1; $i <= 3; $i++) {
                 $inTime = $request['in_time' . $i];
                 $outTime = $request['out_time' . $i];
-    
+
                 // Skip conversion and validation if both in and out times are empty
                 if (empty($inTime) && empty($outTime)) {
                     continue;
                 }
-    
+
                 // If both in and out times are provided together or only one is provided, add them to the timeEntries array
                 if (!empty($inTime) || !empty($outTime)) {
                     // If only one of in time or out time is provided, set it to null
@@ -384,48 +453,10 @@ class TimeSheetServices
                         'in_time' => $inTime,
                         'out_time' => $outTime
                     ];
-    
-                    // Calculate difference in hours if both in and out times are provided
-                    if (!is_null($inTime) && !is_null($outTime)) {
-                        $inTimeObj = Carbon::createFromFormat('h:i A', $inTime);
-                        $outTimeObj = Carbon::createFromFormat('h:i A', $outTime);
-                        $differenceInMinutes = $outTimeObj->diffInMinutes($inTimeObj);
-                        $totalHours += $differenceInMinutes / 60; // Convert minutes to hours
-                    }
                 }
             }
-    
-            // Round total hours to two decimal places
-            $totalHours = round($totalHours, 2);
-        } else {
-            $totalHours = 0;
         }
 
-        $mainHours = $totalHours;
-    
-        // Deduct break duration if set
-        $breakTotal = 0;
-        if ($timesheet->break === '1' && isset($timesheet->break_duration) && isset($timesheet->break_duration_type)) {
-            // Convert break duration to hours based on break_duration_type
-            switch ($timesheet->break_duration_type) {
-                case 'minutes':
-                    $breakTotal = $timesheet->break_duration / 60;
-                    break;
-                case 'hours':
-                    $breakTotal = $timesheet->break_duration;
-                    break;
-                default:
-                    $breakTotal = 0; // Set to 0 if the type is unknown
-                    break;
-            }
-            // Check if breakTotal is more than totalHours
-            if ($breakTotal > $totalHours) {
-                return $this->responseHelper->api_response(null, 422, "error", "Break duration cannot be more than total working hours.");
-            }
-    
-            $totalHours -= $breakTotal;
-            $totalHours = max($totalHours, 0); // Ensure total hours is not negative
-        }
     
         // Check if the attendance ID is provided for updating
         if (!empty($request['attendance_id'])) {
@@ -437,8 +468,10 @@ class TimeSheetServices
             }
             // Update the attendance record with the new data
             $attendance->attendance = json_encode($timeEntries);
-            $attendance->total_hours = $totalHours;
-            $attendance->main_hours = $mainHours;
+            if ($timesheet->hours === '1') {
+                $attendance->total_hours = $totalHours;
+                $attendance->main_hours = $mainHours;
+            }
             $attendance->save();
             $attendanceData = Attendance::find($request['attendance_id']);
             return $this->responseHelper->api_response($attendanceData, 200, "success", 'Attendance updated.');
@@ -583,7 +616,7 @@ class TimeSheetServices
 
         $assignTaskHoursJson = json_encode([]);
         $totalHours = 0;
-        $mainHours = 0;
+        
         $breakTotal = 0;
 
         if (!is_null($attendance)) {
@@ -594,10 +627,9 @@ class TimeSheetServices
                 $breakTotal = $attendance->break_totals;
             }
         }
-
+        $assignTaskHoursJson = json_encode($request['assign_task_hours']);
         // Convert the assign_task_hours array to JSON and calculate total hours
         if ($timesheet->hours === '0') {
-            $assignTaskHoursJson = json_encode($request['assign_task_hours']);
             $totalTaskHours = array_sum($request['assign_task_hours']);
             // Validate that combined hours do not exceed 24
             if ($totalTaskHours > 24) {
@@ -605,10 +637,9 @@ class TimeSheetServices
             }
 
             $totalHours = $totalTaskHours;
-            $mainHours = $totalHours;
-        }
+           
 
-        // Deduct break duration from total hours if set
+            // Deduct break duration from total hours if set
         if ($timesheet->break === '1' && isset($timesheet->break_duration) && isset($timesheet->break_duration_type)) {
             // Convert break duration to hours based on break_duration_type
             switch ($timesheet->break_duration_type) {
@@ -631,7 +662,11 @@ class TimeSheetServices
             
             $totalHours -= $breakTotal;
             $totalHours = max($totalHours, 0); // Ensure total hours is not negative
+          }
+
         }
+
+        
 
         if (!is_null($attendance)) {
             // Update attendance record
@@ -641,7 +676,6 @@ class TimeSheetServices
             $attendance->assigned_task_hours = $assignTaskHoursJson;
             $attendance->date = $formattedDate;
             $attendance->total_hours = $totalHours;
-            $attendance->main_hours = $mainHours;
             $attendance->save();
             $attendanceData = Attendance::where('worker_id', $attendance->worker_id)
                                         ->where('timesheet_id', $attendance->timesheet_id)
@@ -657,7 +691,6 @@ class TimeSheetServices
             $attendance->assigned_task_hours = $assignTaskHoursJson;
             $attendance->date = $formattedDate;
             $attendance->total_hours = $totalHours;
-            $attendance->main_hours = $mainHours;
             $attendance->save();
             $attendanceData = Attendance::where('worker_id', $attendance->worker_id)
                                         ->where('timesheet_id', $attendance->timesheet_id)
