@@ -951,8 +951,6 @@ public function updateAssignTaskCheckbox($request){
     }
 }
 
-
-
 public function checkLocalWorkerExist($timesheet_id)
 {
     $localWorkerExistOnThisTimesheet = LocalWorker::where('timesheet_id', $timesheet_id)->exists();
@@ -963,7 +961,6 @@ public function checkLocalWorkerExist($timesheet_id)
         return $this->responseHelper->api_response(false, 422, "error", "error.");
     }
 }
-
 
 public function makeUniversalWorker($request){
     $ServenDigitCode = $this->responseHelper->generateAlphanumericString();
