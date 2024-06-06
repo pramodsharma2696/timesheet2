@@ -12,6 +12,7 @@ use League\ISO3166\ISO3166;
 use App\Helpers\ResponseHelper;
 use App\Models\UniversalWorker;
 use BaconQrCode\Encoder\QrCode;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Response;
 
 class TimeSheetServices
@@ -424,16 +425,19 @@ class TimeSheetServices
             if ($breakTotal > $totalHours) {
                 return $this->responseHelper->api_response(null, 422, "error", "Break duration cannot be more than total working hours.");
             }
-           
+          
             $totalHours -= $breakTotal;
             $totalHours = max($totalHours, 0); // Ensure total hours is not negative
         }
        
         // Check if total hours exceed planned hours, and if planned_hours is not null
-        if ($timesheet->planned_hours === '1' && !is_null($worker->planned_hours) && $totalHours > $worker->planned_hours) {
+        $totalRecordedHours = $worker->attendance()->sum('total_hours');
+        $plannedHours = $worker->planned_hours;
+        $newTotalHours = $totalRecordedHours + $totalHours;
+        //dd($totalHours, $totalRecordedHours,$plannedHours, $newTotalHours );
+        if ($timesheet->planned_hours === '1' && !is_null($plannedHours) && $newTotalHours > $plannedHours) {
             return $this->responseHelper->api_response(null, 422, "error", "Your time has exceeded allocated hours.");
         }
-      
     } else {
         for ($i = 1; $i <= 3; $i++) {
             $inTime = $request['in_time' . $i];
@@ -490,6 +494,7 @@ class TimeSheetServices
         $attendance->main_hours = $mainHours;
         $attendance->save();
         $attendanceData = Attendance::find($attendance->id);
+        
         return $this->responseHelper->api_response($attendanceData, 200, "success", 'Attendance recorded.');
     }
 }
@@ -535,67 +540,6 @@ class TimeSheetServices
             return $this->responseHelper->api_response(null, 422, "error", "Attendance does not exist.");
         }
     }
-
-
-    // public function assignTaskHours($request){
-       
-    //  // Find the worker and timesheet
-    //  $worker = LocalWorker::find($request['worker_id']);
-    //  $timesheet = TimeSheet::where('timesheet_id', $request['timesheet_id'])->first();
-     
-    //  // Check if the worker and timesheet exist
-    //  if (!$worker) {
-    //      return $this->responseHelper->api_response(null, 422, "error", "Worker does not exist.");
-    //  }
-
-    //  if (!$timesheet) {
-    //      return $this->responseHelper->api_response(null, 422, "error", "Timesheet does not exist.");
-    //  }
-
-    //  $formattedDate = Carbon::createFromFormat('d-m-Y', $request['date'])->format('Y-m-d');
-    //  $attendance = Attendance::where('worker_id',$worker->id)->where('timesheet_id',$timesheet->timesheet_id)->whereDate('date', $formattedDate)->first();
-
-    //  $assignTaskHoursJson = json_encode([]);
-    //  $totalHours = 0;
-    //  if(!is_null($attendance->total_hours)){
-    //     $totalHours = $attendance->total_hours;
-    //  }
-    //  // Convert the assign_task_hours array to JSON
-    //  if ($timesheet->hours === '0') {
-    //     $assignTaskHoursJson = json_encode($request['assign_task_hours']);
-    //     // Validate that combined hours do not exceed 24
-    //     $totalHours = array_sum($request['assign_task_hours']);
-    //     if ($totalHours > 24) {
-    //         return $this->responseHelper->api_response(null, 422, "error", "Total hours cannot exceed 24.");
-    //     }
-    //  }
-
-    // if(!is_null($attendance)){
-    //     // Update attendance record
-    //     $attendance->user_id = auth()->user()->id;
-    //     $attendance->worker_id = $worker->id;
-    //     $attendance->timesheet_id = $timesheet->timesheet_id;
-    //     $attendance->assigned_task_hours = $assignTaskHoursJson;
-    //     $attendance->date = $formattedDate;
-    //     $attendance->total_hours = $totalHours;
-    //     $attendance->save();
-    //  $attendanceData = Attendance::where('worker_id',$attendance->worker_id)->where('timesheet_id',$attendance->timesheet_id)->whereDate('date', $formattedDate)->first();
-    //     return $this->responseHelper->api_response($attendanceData, 200, "success", 'Task hours assigned successfully.');
-    // }else{
-    //  // create attendance record
-    //  $attendance = new Attendance();
-    //  $attendance->user_id = auth()->user()->id;
-    //  $attendance->worker_id = $worker->id;
-    //  $attendance->timesheet_id = $timesheet->timesheet_id;
-    //  $attendance->assigned_task_hours = $assignTaskHoursJson;
-    //  $attendance->date = $formattedDate;
-    //  $attendance->total_hours = $totalHours;
-    //  $attendance->save();
-    //  $attendanceData = Attendance::where('worker_id',$attendance->worker_id)->where('timesheet_id',$attendance->timesheet_id)->whereDate('date', $formattedDate)->first();
-    //  return $this->responseHelper->api_response($attendanceData, 200, "success", 'Task hours assigned successfully.');
-    // }
-     
-    // }
 
     public function assignTaskHours($request)
     {
@@ -908,7 +852,7 @@ public function getDailyWeeklyWorkerTotalHrs($workerId, $timesheetId, $month, $y
     return $this->responseHelper->api_response($data, 200, "success", 'success.');
 }
 
-
+/*
 public function assignTaskAdd($request){
     //dd($request);
     $timesheet = TimeSheet::where('timesheet_id', $request['timesheet_id'])->first();
@@ -939,6 +883,65 @@ public function assignTaskAdd($request){
         return $this->responseHelper->api_response(null, 422, "error", "Calculate Hours is set True, Hence can not be added.");
     }
 }
+
+*/
+
+    public function assignTaskAdd($request)
+    {
+        // Retrieve the timesheet and format the date
+        $timesheet = TimeSheet::where('timesheet_id', $request['timesheet_id'])->first();
+        $formattedDate = Carbon::createFromFormat('d-m-Y', $request['date'])->format('Y-m-d');
+        
+        // Find existing attendance for the worker on the given timesheet and date
+        $attendance = Attendance::where('worker_id', $request['worker_id'])
+                        ->where('timesheet_id', $request['timesheet_id'])
+                        ->whereDate('date', $formattedDate)
+                        ->first();
+        
+        if (!empty($attendance)) {
+            // If attendance exists
+            if ($timesheet->hours === '0') {
+                // If calculate hours is not enabled, update total hours
+                $attendance->total_hours = $request['total_hours'];
+                $attendance->save();
+                // Check if total hours exceed planned hours
+                $totalRecordedHours = $attendance->worker->attendance()->sum('total_hours');
+                $plannedHours = $attendance->worker->planned_hours;
+                $newTotalHours = $totalRecordedHours + $request['total_hours'];
+                if ($timesheet->planned_hours === '1' && !is_null($plannedHours) && $newTotalHours > $plannedHours) {
+                    return $this->responseHelper->api_response(null, 422, "error", "Your time has exceeded allocated hours.");
+                }
+                return $this->responseHelper->api_response($attendance, 200, "success", 'success.');
+            } else {
+                // If calculate hours is enabled, cannot update
+                return $this->responseHelper->api_response(null, 422, "error", "Calculate Hours is set True, Hence can not be updated.");
+            }
+        } else {
+            // If attendance doesn't exist
+            if ($timesheet->hours === '0') {
+                // If calculate hours is not enabled, create new attendance
+                $attendance = new Attendance();
+                $attendance->user_id = auth()->user()->id;
+                $attendance->worker_id = $request['worker_id'];
+                $attendance->timesheet_id = $request['timesheet_id'];
+                $attendance->date = $formattedDate;
+                $attendance->total_hours = $request['total_hours'];
+                $attendance->save();
+                // Check if total hours exceed planned hours
+                $totalRecordedHours = $attendance->worker->attendance()->sum('total_hours');
+                $plannedHours = $attendance->worker->planned_hours;
+                $newTotalHours = $totalRecordedHours + $request['total_hours'];
+                if ($timesheet->planned_hours === '1' && !is_null($plannedHours) && $newTotalHours > $plannedHours) {
+                    $attendance->delete();
+                    return $this->responseHelper->api_response(null, 422, "error", "Your time has exceeded allocated hours.");
+                }
+                return $this->responseHelper->api_response($attendance, 200, "success", 'success.');
+            }
+            // If calculate hours is enabled, cannot add new attendance
+            return $this->responseHelper->api_response(null, 422, "error", "Calculate Hours is set True, Hence can not be added.");
+        }
+    }
+
 
 public function updateAssignTaskCheckbox($request){
     $timeSheet = TimeSheet::where('timesheet_id', $request['timesheet_id'])->first();
