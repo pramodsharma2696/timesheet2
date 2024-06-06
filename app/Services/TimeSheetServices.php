@@ -60,7 +60,7 @@ class TimeSheetServices
                     ])
                 ];
             })->toJson();
-
+            $createTimesheet->planned_hours = $request['planned_hours'];
             $createTimesheet->assign_admin = $assignAdminData;
             $createTimesheet->timesheet_qr = $this->generateQR($request['projectid']);
             $createTimesheet->save();
@@ -92,7 +92,7 @@ class TimeSheetServices
                     ])
                 ];
             })->toJson();
-
+            $createTimesheet->planned_hours = $request['planned_hours'];
             $createTimesheet->assign_admin = $assignAdminData;
             $createTimesheet->timesheet_qr = $this->generateQR($request['projectid']);
             $createTimesheet->save();
@@ -157,7 +157,7 @@ class TimeSheetServices
                     ])
                 ];
             })->toJson();
-    
+            $timesheetData->planned_hours = $request['planned_hours'];
             $timesheetData->assign_admin = $assignAdminData;
             $timesheetData->save();
             $timesheetData = TimeSheet::with('project')->where('id', $timesheetData->id)->first();
@@ -345,151 +345,155 @@ class TimeSheetServices
 
 
     public function recordAttendance($request)
-    {
-        // Find the worker and timesheet
-        $worker = LocalWorker::find($request['worker_id']);
-        $timesheet = TimeSheet::where('timesheet_id', $request['timesheet_id'])->first();
-        // Check if the worker and timesheet exist
-        if (!$worker) {
-            return $this->responseHelper->api_response(null, 422, "error", "Worker does not exist.");
+{
+    // Find the worker and timesheet
+    $worker = LocalWorker::find($request['worker_id']);
+    $timesheet = TimeSheet::where('timesheet_id', $request['timesheet_id'])->first();
+   
+    // Check if the worker and timesheet exist
+    if (!$worker) {
+        return $this->responseHelper->api_response(null, 422, "error", "Worker does not exist.");
+    }
+
+    if (!$timesheet) {
+        return $this->responseHelper->api_response(null, 422, "error", "Timesheet does not exist.");
+    }
+
+    $timeEntries = [];
+    $totalHours = 0;
+    $mainHours = 0;
+
+    // Check if we need to calculate hours based on the timesheet's calculate_hours column
+    if ($timesheet->hours === '1') {
+     
+        // Convert time from 12-hour format to 24-hour format and validate
+        for ($i = 1; $i <= 3; $i++) {
+            $inTime = $request['in_time' . $i];
+            $outTime = $request['out_time' . $i];
+
+            // Skip conversion and validation if both in and out times are empty
+            if (empty($inTime) && empty($outTime)) {
+                continue;
+            }
+
+            // If both in and out times are provided together or only one is provided, add them to the timeEntries array
+            if (!empty($inTime) || !empty($outTime)) {
+                // If only one of in time or out time is provided, set it to null
+                if (empty($inTime)) {
+                    $inTime = null;
+                }
+                if (empty($outTime)) {
+                    $outTime = null;
+                }
+                $timeEntries[] = [
+                    'in_time' => $inTime,
+                    'out_time' => $outTime
+                ];
+
+                // Calculate difference in hours if both in and out times are provided
+                if (!is_null($inTime) && !is_null($outTime)) {
+                    $inTimeObj = Carbon::createFromFormat('h:i A', $inTime);
+                    $outTimeObj = Carbon::createFromFormat('h:i A', $outTime);
+                    $differenceInMinutes = $outTimeObj->diffInMinutes($inTimeObj);
+                    $totalHours += $differenceInMinutes / 60; // Convert minutes to hours
+                }
+            }
         }
-    
-        if (!$timesheet) {
-            return $this->responseHelper->api_response(null, 422, "error", "Timesheet does not exist.");
-        }
-    
-        $timeEntries = [];
-        $totalHours = 0;
-        $mainHours = 0;
-    
+
+        // Round total hours to two decimal places
+        $totalHours = round($totalHours, 2);
+        $mainHours = $totalHours;
         
 
-        
-
-        // Check if we need to calculate hours based on the timesheet's calculate_hours column
-        if ($timesheet->hours === '1') {
-            // Convert time from 12-hour format to 24-hour format and validate
-                for ($i = 1; $i <= 3; $i++) {
-                    $inTime = $request['in_time' . $i];
-                    $outTime = $request['out_time' . $i];
-
-                    // Skip conversion and validation if both in and out times are empty
-                    if (empty($inTime) && empty($outTime)) {
-                        continue;
-                    }
-
-                    // If both in and out times are provided together or only one is provided, add them to the timeEntries array
-                    if (!empty($inTime) || !empty($outTime)) {
-                        // If only one of in time or out time is provided, set it to null
-                        if (empty($inTime)) {
-                            $inTime = null;
-                        }
-                        if (empty($outTime)) {
-                            $outTime = null;
-                        }
-                        $timeEntries[] = [
-                            'in_time' => $inTime,
-                            'out_time' => $outTime
-                        ];
-
-                        // Calculate difference in hours if both in and out times are provided
-                        if (!is_null($inTime) && !is_null($outTime)) {
-                            $inTimeObj = Carbon::createFromFormat('h:i A', $inTime);
-                            $outTimeObj = Carbon::createFromFormat('h:i A', $outTime);
-                            $differenceInMinutes = $outTimeObj->diffInMinutes($inTimeObj);
-                            $totalHours += $differenceInMinutes / 60; // Convert minutes to hours
-                        }
-                    }
-                }
-
-                // Round total hours to two decimal places
-                $totalHours = round($totalHours, 2);
-                $mainHours = $totalHours;
-
-                // Deduct break duration if set
-                $breakTotal = 0;
-                if ($timesheet->break === '1' && isset($timesheet->break_duration) && isset($timesheet->break_duration_type)) {
-                    // Convert break duration to hours based on break_duration_type
-                    switch ($timesheet->break_duration_type) {
-                        case 'minutes':
-                            $breakTotal = $timesheet->break_duration / 60;
-                            break;
-                        case 'hours':
-                            $breakTotal = $timesheet->break_duration;
-                            break;
-                        default:
-                            $breakTotal = 0; // Set to 0 if the type is unknown
-                            break;
-                    }
-                    // Check if breakTotal is more than totalHours
-                    if ($breakTotal > $totalHours) {
-                        return $this->responseHelper->api_response(null, 422, "error", "Break duration cannot be more than total working hours.");
-                    }
-            
-                    $totalHours -= $breakTotal;
-                    $totalHours = max($totalHours, 0); // Ensure total hours is not negative
-                }
-            
-        }else{
-            for ($i = 1; $i <= 3; $i++) {
-                $inTime = $request['in_time' . $i];
-                $outTime = $request['out_time' . $i];
-
-                // Skip conversion and validation if both in and out times are empty
-                if (empty($inTime) && empty($outTime)) {
-                    continue;
-                }
-
-                // If both in and out times are provided together or only one is provided, add them to the timeEntries array
-                if (!empty($inTime) || !empty($outTime)) {
-                    // If only one of in time or out time is provided, set it to null
-                    if (empty($inTime)) {
-                        $inTime = null;
-                    }
-                    if (empty($outTime)) {
-                        $outTime = null;
-                    }
-                    $timeEntries[] = [
-                        'in_time' => $inTime,
-                        'out_time' => $outTime
-                    ];
-                }
+        // Deduct break duration if set
+        $breakTotal = 0;
+        if ($timesheet->break === '1' && isset($timesheet->break_duration) && isset($timesheet->break_duration_type)) {
+            // Convert break duration to hours based on break_duration_type
+            switch ($timesheet->break_duration_type) {
+                case 'minutes':
+                    $breakTotal = $timesheet->break_duration / 60;
+                    break;
+                case 'hours':
+                    $breakTotal = $timesheet->break_duration;
+                    break;
+                default:
+                    $breakTotal = 0; // Set to 0 if the type is unknown
+                    break;
             }
+            // Check if breakTotal is more than totalHours
+            if ($breakTotal > $totalHours) {
+                return $this->responseHelper->api_response(null, 422, "error", "Break duration cannot be more than total working hours.");
+            }
+           
+            $totalHours -= $breakTotal;
+            $totalHours = max($totalHours, 0); // Ensure total hours is not negative
         }
+       
+        // Check if total hours exceed planned hours, and if planned_hours is not null
+        if ($timesheet->planned_hours === '1' && !is_null($worker->planned_hours) && $totalHours > $worker->planned_hours) {
+            return $this->responseHelper->api_response(null, 422, "error", "Your time has exceeded allocated hours.");
+        }
+      
+    } else {
+        for ($i = 1; $i <= 3; $i++) {
+            $inTime = $request['in_time' . $i];
+            $outTime = $request['out_time' . $i];
 
-    
-        // Check if the attendance ID is provided for updating
-        if (!empty($request['attendance_id'])) {
-            // Update existing attendance record
-            $attendance = Attendance::find($request['attendance_id']);
-    
-            if (!$attendance) {
-                return $this->responseHelper->api_response(null, 422, "error", "Attendance record does not exist.");
+            // Skip conversion and validation if both in and out times are empty
+            if (empty($inTime) && empty($outTime)) {
+                continue;
             }
-            // Update the attendance record with the new data
-            $attendance->attendance = json_encode($timeEntries);
-            if ($timesheet->hours === '1') {
-                $attendance->total_hours = $totalHours;
-                $attendance->main_hours = $mainHours;
+
+            // If both in and out times are provided together or only one is provided, add them to the timeEntries array
+            if (!empty($inTime) || !empty($outTime)) {
+                // If only one of in time or out time is provided, set it to null
+                if (empty($inTime)) {
+                    $inTime = null;
+                }
+                if (empty($outTime)) {
+                    $outTime = null;
+                }
+                $timeEntries[] = [
+                    'in_time' => $inTime,
+                    'out_time' => $outTime
+                ];
             }
-            $attendance->save();
-            $attendanceData = Attendance::find($request['attendance_id']);
-            return $this->responseHelper->api_response($attendanceData, 200, "success", 'Attendance updated.');
-        } else {
-            // Create new attendance record
-            $attendance = new Attendance();
-            $attendance->user_id = auth()->user()->id;
-            $attendance->worker_id = $worker->id;
-            $attendance->timesheet_id = $timesheet->timesheet_id;
-            $attendance->attendance = json_encode($timeEntries);
-            $attendance->date = Carbon::createFromFormat('d-m-Y', $request['date'])->format('Y-m-d');
-            $attendance->total_hours = $totalHours;
-            $attendance->main_hours = $mainHours;
-            $attendance->save();
-            $attendanceData = Attendance::find($attendance->id);
-            return $this->responseHelper->api_response($attendanceData, 200, "success", 'Attendance recorded.');
         }
     }
+
+    // Check if the attendance ID is provided for updating
+    if (!empty($request['attendance_id'])) {
+        // Update existing attendance record
+        $attendance = Attendance::find($request['attendance_id']);
+
+        if (!$attendance) {
+            return $this->responseHelper->api_response(null, 422, "error", "Attendance record does not exist.");
+        }
+        // Update the attendance record with the new data
+        $attendance->attendance = json_encode($timeEntries);
+        if ($timesheet->hours === '1') {
+            $attendance->total_hours = $totalHours;
+            $attendance->main_hours = $mainHours;
+        }
+        $attendance->save();
+        $attendanceData = Attendance::find($request['attendance_id']);
+        return $this->responseHelper->api_response($attendanceData, 200, "success", 'Attendance updated.');
+    } else {
+        // Create new attendance record
+        $attendance = new Attendance();
+        $attendance->user_id = auth()->user()->id;
+        $attendance->worker_id = $worker->id;
+        $attendance->timesheet_id = $timesheet->timesheet_id;
+        $attendance->attendance = json_encode($timeEntries);
+        $attendance->date = Carbon::createFromFormat('d-m-Y', $request['date'])->format('Y-m-d');
+        $attendance->total_hours = $totalHours;
+        $attendance->main_hours = $mainHours;
+        $attendance->save();
+        $attendanceData = Attendance::find($attendance->id);
+        return $this->responseHelper->api_response($attendanceData, 200, "success", 'Attendance recorded.');
+    }
+}
+
     
 
 
