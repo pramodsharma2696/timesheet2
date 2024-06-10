@@ -57,7 +57,8 @@ class TimeSheetServices
                     'admin_id' => $adminData['admin_id'],
                     'role' => json_encode([
                         'manage_time' => $adminData['manage_time'],
-                        'manage_worker' => $adminData['manage_worker']
+                        'manage_worker' => $adminData['manage_worker'],
+                        'manage_approval' => $adminData['manage_approval']
                     ])
                 ];
             })->toJson();
@@ -89,7 +90,8 @@ class TimeSheetServices
                     'admin_id' => $adminData['admin_id'],
                     'role' => json_encode([
                         'manage_time' => $adminData['manage_time'],
-                        'manage_worker' => $adminData['manage_worker']
+                        'manage_worker' => $adminData['manage_worker'],
+                        'manage_approval' => $adminData['manage_approval']
                     ])
                 ];
             })->toJson();
@@ -154,7 +156,8 @@ class TimeSheetServices
                     'admin_id' => $adminData['admin_id'],
                     'role' => json_encode([
                         'manage_time' => $adminData['manage_time'],
-                        'manage_worker' => $adminData['manage_worker']
+                        'manage_worker' => $adminData['manage_worker'],
+                        'manage_approval' => $adminData['manage_approval']
                     ])
                 ];
             })->toJson();
