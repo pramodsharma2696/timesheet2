@@ -17,7 +17,7 @@ return new class extends Migration
             $table->bigInteger('user_id')->unsigned();
             $table->bigInteger('project_id')->unsigned()->nullable();
             $table->date('start_date');
-            $table->date('end_date');
+            $table->date('end_date')->nullable();
             $table->enum('status',[0, 1])->default(1);
             $table->enum('localwork',[0, 1])->default(0);
             $table->enum('scanning',[0, 1])->default(0);

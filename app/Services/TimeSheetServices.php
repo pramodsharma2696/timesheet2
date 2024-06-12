@@ -110,27 +110,29 @@ class TimeSheetServices
     {
         $userid = auth()->user()->id;
         $timesheetData = TimeSheet::where('user_id', $userid)->where('id', $request['timesheetid'])->first();
-    
+        
         if (empty($timesheetData)) {
             return $this->responseHelper->api_response(null, 422, "error", "Timesheet does not exist to update.");
         } else {
+            
             $newStartDate = date('Y-m-d', strtotime($request['start_date']));
             $newEndDate = isset($request['end_date']) && !empty($request['end_date']) ? date('Y-m-d', strtotime($request['end_date'])) : null;
 
             $firstAattendanceDate = Attendance::where('timesheet_id',$timesheetData->timesheet_id)->orderBy('date','asc')->first();
             $lastAttendanceDate = Attendance::where('timesheet_id',$timesheetData->timesheet_id)->orderBy('date','desc')->first();
 
-    
+            
+           
             // Check if the new start date is greater than the existing start date
-            if ($newStartDate > $firstAattendanceDate->date) {
+            if (!is_null($firstAattendanceDate) && $newStartDate > $firstAattendanceDate->date) {
                 return $this->responseHelper->api_response(null, 422, "error", "Start date cannot be changed to a later date.");
             }
     
             // Check if the new end date is less than the existing end date
-            if (!is_null($newEndDate) && $newEndDate < $lastAttendanceDate->date) {
+            if (!is_null($newEndDate) && !is_null($lastAttendanceDate) && $newEndDate < $lastAttendanceDate->date) {
                 return $this->responseHelper->api_response(null, 422, "error", "End date cannot be changed to an earlier date.");
             }
-    
+           
             // Validate the end date to be after the start date
             if (!is_null($newEndDate) && $newEndDate < $newStartDate) {
                 return $this->responseHelper->api_response(null, 422, "error", "End date must be after the start date.");
