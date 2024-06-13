@@ -9,7 +9,6 @@ class Attendance extends Model
 {
     use HasFactory;
     protected $guarded = [];
-
     public function worker()
     {
         return $this->belongsTo(LocalWorker::class, 'worker_id', 'id');

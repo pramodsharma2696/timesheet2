@@ -504,9 +504,6 @@ class TimeSheetServices
     }
 }
 
-    
-
-
     public function approveAttendance($request){
         $Attendance = Attendance::where('id', $request['attendance_id'])->first();
         if (!empty($Attendance)) {
@@ -545,6 +542,7 @@ class TimeSheetServices
             return $this->responseHelper->api_response(null, 422, "error", "Attendance does not exist.");
         }
     }
+
 
     public function assignTaskHours($request)
     {
@@ -652,7 +650,6 @@ class TimeSheetServices
             return $this->responseHelper->api_response($attendanceData, 200, "success", 'Task hours assigned successfully.');
         }
     }
-
 
 
     public function getInOutAttendanceData($timesheet_id, $worker_id, $startDate, $endDate) {
