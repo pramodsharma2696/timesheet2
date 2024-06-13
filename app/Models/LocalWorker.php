@@ -14,4 +14,8 @@ class LocalWorker extends Model
     {
         return $this->hasOne(Attendance::class, 'worker_id', 'id');
     }
+    public function timesheet()
+    {
+        return $this->belongsTo(Timesheet::class, 'timesheet_id', 'id');
+    }
 }
