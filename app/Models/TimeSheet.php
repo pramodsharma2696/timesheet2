@@ -16,9 +16,4 @@ class TimeSheet extends Model
     public function project(){
         return $this->belongsTo(ProjectList::class,'project_id','id');
     }
-
-    public function workers()
-    {
-        return $this->hasMany(LocalWorker::class, 'timesheet_id', 'id');
-    }
 }

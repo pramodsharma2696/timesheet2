@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('worker_id');
             $table->string('firstname');
             $table->string('lastname');
-            $table->string('email');
+            $table->string('email')->unique();
             $table->string('country');
             $table->enum('status',['active','inactive'])->default('active');
             $table->date('registration_date');

@@ -214,9 +214,9 @@ class TimeSheetController extends Controller
         }
     }
 
-    public function getInOutAttendanceData($timesheet_id,$startDate,$endDate){
+    public function getInOutAttendanceData($timesheet_id,$worker_id,$startDate,$endDate){
         try {
-            $this->timeSheetServices->getInOutAttendanceData($timesheet_id,$startDate,$endDate);
+            $this->timeSheetServices->getInOutAttendanceData($timesheet_id,$worker_id,$startDate,$endDate);
         } catch (\Exception $e) {
             return $this->responseHelper->api_response(null, 422,"error", $e->getMessage());
         }
