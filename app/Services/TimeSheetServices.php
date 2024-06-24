@@ -651,31 +651,27 @@ class TimeSheetServices
         }
     }
 
-
     public function getInOutAttendanceData($timesheet_id, $startDate, $endDate) {
         // Parse start and end dates to ensure they're in the correct format
         $startDate = date('Y-m-d', strtotime($startDate));
         $endDate = date('Y-m-d', strtotime($endDate));
-
-       
+    
         // Get all workers associated with the given timesheet
         $workers = LocalWorker::where('timesheet_id', $timesheet_id)->get();
+        
         // Prepare an array to hold the final attendances data for all workers
         $allWorkersAttendanceData = [];
-
-       
+    
         foreach ($workers as $worker) {
             // Query the database for each worker's attendance in the specified date range
             $attendances = $worker->attendance()
                                   ->whereBetween('date', [$startDate, $endDate])
                                   ->orderBy('date') // Ensure attendances are ordered by date
                                   ->get();
-
-
+    
             // Prepare an array to hold the attendance data for the current worker
             $attendancesData = [];
-
-      
+    
             // Loop through each date in the range
             for ($date = $startDate; $date <= $endDate; $date = date('Y-m-d', strtotime($date . ' +1 day'))) {
                 // Check if there is an attendance entry for the current date
@@ -705,8 +701,7 @@ class TimeSheetServices
                         $firstInTime = $attendanceData[0]['in_time'];
                         $lastOutTime = end($attendanceData)['out_time'];
                     }
-
-              
+    
                     // Add the attendance data to the array
                     $attendancesData[] = [
                         'id' => $attendance->id,
@@ -724,9 +719,7 @@ class TimeSheetServices
                     ];
                 }
             }
-        }
-
-       
+    
             // Add the worker's data and their attendance data to the overall array
             $allWorkersAttendanceData[] = [
                 'worker' => [
@@ -743,7 +736,8 @@ class TimeSheetServices
                 ],
                 'attendance' => $attendancesData,
             ];
-        
+        }
+    
         // Return the response without wrapping in an additional key
         return $this->responseHelper->api_response($allWorkersAttendanceData, 200, "success", 'Success.');
     }
