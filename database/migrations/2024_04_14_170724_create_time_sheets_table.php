@@ -24,7 +24,7 @@ return new class extends Migration
             $table->enum('hours',[0, 1])->default(0);
             $table->enum('break',[0, 1])->default(0);
 			$table->enum('planned_hours',[0, 1])->default(0);
-            $table->integer('break_duration')->nullable();
+            $table->integer('break_duration');
             $table->string('timesheet_qr')->nullable();
             $table->enum('break_duration_type',['hours','minutes'])->default('hours');
             $table->json("assign_admin")->nullable();;
