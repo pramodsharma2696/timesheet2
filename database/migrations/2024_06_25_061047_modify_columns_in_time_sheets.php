@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::table('time_sheets', function (Blueprint $table) {
             // Change the project_id column to CHAR(16)
-            $table->char('project_id', 16)->nullable()->change();
+            $table->char('project_id', 36)->nullable()->change();
             // Make the break_duration column nullable
             $table->integer('break_duration')->nullable()->change();
         });
