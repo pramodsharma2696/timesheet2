@@ -264,6 +264,30 @@ class TimeSheetController extends Controller
         }
     }
 
+    public function getUniversalWorkers(){
+        try {
+            $this->timeSheetServices->getUniversalWorkers();
+        }catch(\Exception $e){
+            return $this->responseHelper->api_response(null, 422,"error", $e->getMessage());
+        }
+    }
+    public function InviteUniversalWorker(Request $request){
+        $validation = $this->responseHelper->api_validate_request($request->all(), config('rules.inviteUniversalWorker'));
+        if ($validation !== false) {
+            $this->timeSheetServices->inviteUniversalWorker($request->all());
+        }else{
+            return $this->responseHelper->api_response(null,422,"error", $validation);
+        }
+    }
+    public function AcceptRejectInvitation(Request $request){
+        $validation = $this->responseHelper->api_validate_request($request->all(), config('rules.accept_reject_invitation'));
+        if ($validation !== false) {
+            $this->timeSheetServices->acceptRejectInvitation($request->all());
+        }else{
+            return $this->responseHelper->api_response(null,422,"error", $validation);
+        }
+    }
+
     
     
 }

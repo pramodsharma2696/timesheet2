@@ -58,4 +58,12 @@ return [
         'email' => 'required',
         'country' => 'required'
     ],
+    'inviteUniversalWorker' => [
+        'worker_id' => 'required',
+        'timesheet_id' => 'required'
+    ],
+    'accept_reject_invitation' => [
+        'status' => 'required',
+        'worker_id' => 'required'
+    ],
 ];

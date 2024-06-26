@@ -10,6 +10,7 @@ use App\Models\LocalWorker;
 use App\Models\ProjectList;
 use League\ISO3166\ISO3166;
 use App\Helpers\ResponseHelper;
+use App\Models\PendingInvitation;
 use App\Models\UniversalWorker;
 use BaconQrCode\Encoder\QrCode;
 use Illuminate\Support\Facades\Log;
@@ -1011,12 +1012,88 @@ public function makeUniversalWorker($request){
 
 }
 
+public function getUniversalWorkers(){
+    $invitedWorkerIds = PendingInvitation::whereIn('status', [0, 1])
+                        ->pluck('worker_id')
+                        ->toArray();
+    // Get all universal workers excluding those with pending or accepted invitations
+    $universalWorkers = UniversalWorker::whereNotIn('worker_id', $invitedWorkerIds)->get();
+    if ($universalWorkers) {
+        return $this->responseHelper->api_response($universalWorkers, 200, "success", 'success.');
+    } else {
+        return $this->responseHelper->api_response(false, 422, "error", "error.");
+    }
+
+}
+
+public function inviteUniversalWorker($request)
+{
+    // Retrieve the universal worker based on the provided worker_id from the request
+    $universalWorker = UniversalWorker::where('worker_id', $request['worker_id'])->first();
+
+    // Check if the universal worker exists
+    if (!empty($universalWorker)) {
+        // Create a new PendingInvitation instance
+        $invitedWorker = new PendingInvitation();
+        $invitedWorker->worker_id = $universalWorker->worker_id;
+        $invitedWorker->timesheet_id = $request['timesheet_id'];
+        $invitedWorker->first_name = $universalWorker->firstname;
+        $invitedWorker->last_name = $universalWorker->lastname;
+        // Save the invitation
+        $invitedWorker->save();
+
+        // Return a success response with the created invitation data
+        return $this->responseHelper->api_response($invitedWorker, 200, "success", 'Invitation sent successfully.');
+    } else {
+        // Return an error response if the universal worker does not exist
+        return $this->responseHelper->api_response(false, 422, "error", "Universal worker does not exist");
+    }
+}
 
 
-    
+public function acceptRejectInvitation($request)
+{
+    // Retrieve the pending invitation based on the provided worker_id from the request
+    $invitedWorker = PendingInvitation::where('worker_id', $request['worker_id'])->first();
 
+    // Check if the invitation exists
+    if (!empty($invitedWorker)) {
+        // Check if the status is set to '1' (accepted)
+        if (isset($request['status']) && $request['status'] === '1') {
+            // Update the status to '1' (accepted)
+            PendingInvitation::where('worker_id', $request['worker_id'])->update(['status' => '1']);
 
-    
+            // Create a new LocalWorker instance and save the accepted worker's details
+            $createLocalWorker = new LocalWorker();
+            $createLocalWorker->worker_id = $invitedWorker->worker_id;
+            $createLocalWorker->timesheet_id = $invitedWorker->timesheet_id;
+            $createLocalWorker->first_name = $invitedWorker->first_name;
+            $createLocalWorker->last_name = $invitedWorker->last_name;
+            $createLocalWorker->save();
+
+            // Retrieve the updated invitation data
+            $invitedWorker1 = PendingInvitation::where('worker_id', $request['worker_id'])->first();
+            // Return a success response with the updated invitation data
+            return $this->responseHelper->api_response($invitedWorker1, 200, "success", 'Invitation accepted.');
+        }
+
+        // Check if the status is set to '2' (rejected)
+        if (isset($request['status']) && $request['status'] === '2') {
+            // Update the status to '2' (rejected)
+            PendingInvitation::where('worker_id', $request['worker_id'])->update(['status' => '2']);
+
+            // Retrieve the updated invitation data
+            $invitedWorker1 = PendingInvitation::where('worker_id', $request['worker_id'])->first();
+            // Return a success response with the updated invitation data
+            return $this->responseHelper->api_response($invitedWorker1, 200, "success", 'Invitation rejected.');
+        }
+    } else {
+        // Return an error response if the invitation does not exist
+        return $this->responseHelper->api_response(false, 422, "error", "Invitation does not exist");
+    }
+}
+
+ 
     
 
     

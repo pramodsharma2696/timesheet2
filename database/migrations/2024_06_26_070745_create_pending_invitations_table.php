@@ -11,15 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('local_workers', function (Blueprint $table) {
-            $table->id('id');
+        Schema::create('pending_invitations', function (Blueprint $table) {
+            $table->id();
             $table->string('worker_id');
+            $table->unsignedBigInteger('timesheet_id')->unsigned()->nullable();
             $table->string('first_name');
             $table->string('last_name');
-            $table->enum('status',['active','inactive'])->default('active');
-            $table->integer('planned_hours')->nullable();
-            $table->json('work_assignment')->nullable();
-            $table->unsignedBigInteger('timesheet_id')->unsigned()->nullable();
+            $table->enum('status',[0, 1, 2])->default(0)->comment('0:pending,1:accept,2:reject');
             $table->timestamps();
         });
     }
@@ -29,6 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('local_workers');
+        Schema::dropIfExists('pending_invitations');
     }
 };
