@@ -68,7 +68,9 @@ class TimeSheetServices
             $createTimesheet->timesheet_qr = $this->generateQR($request['projectid']);
             $createTimesheet->save();
             $timesheetData = TimeSheet::with('project')->where('id', $createTimesheet->id)->first();
+            $this->responseHelper->logAction('createTimeSheet', $request, $timesheetData, 200);
             return $this->responseHelper->api_response($timesheetData, 200, "success", 'Timesheet created.');
+           
         }
     }else{
             $createTimesheet = new TimeSheet();
@@ -101,7 +103,9 @@ class TimeSheetServices
             $createTimesheet->timesheet_qr = $this->generateQR($request['projectid']);
             $createTimesheet->save();
             $timesheetData = TimeSheet::with('project')->where('id', $createTimesheet->id)->first();
+            $this->responseHelper->logAction('createTimeSheet', $request, $timesheetData, 200);
             return $this->responseHelper->api_response($timesheetData, 200, "success", 'Timesheet created.');
+           
       }
         
     }
@@ -168,8 +172,10 @@ class TimeSheetServices
             $timesheetData->assign_admin = $assignAdminData;
             $timesheetData->save();
             $timesheetData = TimeSheet::with('project')->where('id', $timesheetData->id)->first();
-    
+            $this->responseHelper->logAction('updateTimesheet', $request, $timesheetData, 200);
             return $this->responseHelper->api_response($timesheetData, 200, "success", 'Timesheet updated.');
+           
+            
         }
     }
     
@@ -182,6 +188,7 @@ class TimeSheetServices
             return $this->responseHelper->api_response($timesheetData, 200, "success", 'Timesheet details.');
         } else {
             return $this->responseHelper->api_response(null, 422, "error", "This timesheet does not exist.");
+           
         }
     }
     public function showallTimesheet()
@@ -199,7 +206,9 @@ class TimeSheetServices
         $timesheetData = TimeSheet::where('id', $id)->first();
         if (!empty($timesheetData)) {
             $timesheetData->delete();
+            $this->responseHelper->logAction('deleteTimesheet', ['id' => $id], $timesheetData, 200);
             return $this->responseHelper->api_response(null, 200, "success", 'Timesheet deleted.');
+           
         } else {
             return $this->responseHelper->api_response(null, 422, "error", "This timesheet does not exist.");
         }
@@ -209,7 +218,9 @@ class TimeSheetServices
     {
         $timesheetCount = TimeSheet::count();
         $newTimeSheetId = $timesheetCount + 1;
+        $this->responseHelper->logAction('generateTimeSheetId', null, ['timesheetId' => $newTimeSheetId], 200);
         return $this->responseHelper->api_response(['timesheetId' => $newTimeSheetId], 200, "success", 'Time sheet ID generated successfully.');
+        
     }
 
 
@@ -237,7 +248,10 @@ class TimeSheetServices
                     TimeSheet::where('project_id', $projectData->id)->update(['timesheet_qr' => $original_dir_path]);
                 }
             }
+            $this->responseHelper->logAction('generateQR', ['projectId' => $projectId], $original_dir_path, 200);
             return $original_dir_path;
+            
+            
         } else {
             return null;
         }
@@ -255,7 +269,9 @@ class TimeSheetServices
 
             $original_dir_path = $this->responseHelper->GenerateRefreshQR($projectData); // Generate new QR code
             TimeSheet::where('project_id', $projectData->id)->update(['timesheet_qr' => $original_dir_path]);
+            $this->responseHelper->logAction('refreshQR', ['projectId' => $projectId], $original_dir_path, 200);
             return $this->responseHelper->api_response(['timesheet_qr' => $original_dir_path], 200, "success", 'Timesheet QR is regenerated.');
+           
         } else {
             return $this->responseHelper->api_response(null, 422, "error", "This project does not exist.");
         }
@@ -274,7 +290,9 @@ class TimeSheetServices
             $createLocalWorker->last_name = $data['last_name'];
             $createLocalWorker->save();
         }
+        $this->responseHelper->logAction('addLocalWorker', $request, $createLocalWorker, 200);
         return $this->responseHelper->api_response(null, 200, "success", 'Local Workers added successfully.');
+       
     }
     public function InviteWorker($request)
     {
@@ -287,7 +305,9 @@ class TimeSheetServices
             $createLocalWorker->last_name = $data['last_name'];
             $createLocalWorker->save();
         }
+        $this->responseHelper->logAction('InviteWorker', $request, $createLocalWorker, 200);
         return $this->responseHelper->api_response(null, 200, "success", 'Invited successfully.');
+       
     }
     public function updateWorker($request)
     {
@@ -305,7 +325,9 @@ class TimeSheetServices
                 $worker->work_assignment = $workAssignmentJson;
             }
             $worker->save();
+            $this->responseHelper->logAction('updateWorker', $request, $worker, 200);
             return $this->responseHelper->api_response($worker, 200, "success", 'Worker updated successfully.');
+            
         } else {
             return $this->responseHelper->api_response(null, 422, "error", "Worker does not exist.");
         }
@@ -324,7 +346,9 @@ class TimeSheetServices
     {
         $worker = LocalWorker::where('timesheet_id', $timesheetId)->get();
         if (!empty($worker)) {
+            $this->responseHelper->logAction('getTimesheetIdBasedWorker', ['timesheetId' => $timesheetId], $worker, 200);
             return $this->responseHelper->api_response($worker, 200, "success", 'success.');
+            
         } else {
             return $this->responseHelper->api_response(null, 422, "error", "data does not exist.");
         }
@@ -347,7 +371,9 @@ class TimeSheetServices
                 $worker->attendance = null;
             }
         }
+        $this->responseHelper->logAction('getTimesheetIdAndDateBasedWorker', ['timesheetId' => $timesheetid, 'date'=>$date], $workers, 200);
         return $this->responseHelper->api_response($workers, 200, "success", 'success.');
+       
     }
 
 
@@ -487,7 +513,9 @@ class TimeSheetServices
         }
         $attendance->save();
         $attendanceData = Attendance::find($request['attendance_id']);
+        $this->responseHelper->logAction('recordAttendance', $request, $attendanceData, 200);
         return $this->responseHelper->api_response($attendanceData, 200, "success", 'Attendance updated.');
+        
     } else {
         // Create new attendance record
         $attendance = new Attendance();
@@ -500,8 +528,9 @@ class TimeSheetServices
         $attendance->main_hours = $mainHours;
         $attendance->save();
         $attendanceData = Attendance::find($attendance->id);
-        
+        $this->responseHelper->logAction('recordAttendance', $request, $attendanceData, 200);
         return $this->responseHelper->api_response($attendanceData, 200, "success", 'Attendance recorded.');
+       
     }
 }
 
@@ -510,7 +539,9 @@ class TimeSheetServices
         if (!empty($Attendance)) {
             Attendance::where('id', $request['attendance_id'])->update(['approve'=>$request['approve']]);
             $UpdatedAttendace = Attendance::findOrFail($request['attendance_id']);
+            $this->responseHelper->logAction('approveAttendance', $request, $UpdatedAttendace, 200);
             return $this->responseHelper->api_response($UpdatedAttendace, 200, "success", 'success.');
+           
         } else {
             return $this->responseHelper->api_response(null, 422, "error", "Attendance does not exist.");
         }
@@ -537,7 +568,9 @@ class TimeSheetServices
                 }
             }
             // Return the updated attendance records
+            $this->responseHelper->logAction('approveAllAttendance', $request, $Attendance, 200);
             return $this->responseHelper->api_response($Attendance, 200, "success", 'Success.');
+            
         } else {
             // No attendance records found
             return $this->responseHelper->api_response(null, 422, "error", "Attendance does not exist.");
@@ -633,6 +666,7 @@ class TimeSheetServices
                                         ->where('timesheet_id', $attendance->timesheet_id)
                                         ->whereDate('date', $formattedDate)
                                         ->first();
+            $this->responseHelper->logAction('assignTaskHours', $request, $attendanceData, 200);
             return $this->responseHelper->api_response($attendanceData, 200, "success", 'Task hours assigned successfully.');
         } else {
             // Create attendance record
@@ -648,7 +682,9 @@ class TimeSheetServices
                                         ->where('timesheet_id', $attendance->timesheet_id)
                                         ->whereDate('date', $formattedDate)
                                         ->first();
+            $this->responseHelper->logAction('assignTaskHours', $request, $attendanceData, 200);
             return $this->responseHelper->api_response($attendanceData, 200, "success", 'Task hours assigned successfully.');
+            
         }
     }
 
@@ -740,7 +776,9 @@ class TimeSheetServices
         }
     
         // Return the response without wrapping in an additional key
+        $this->responseHelper->logAction('getInOutAttendanceData', ['timesheet_id'=>$timesheet_id,'startDate'=>$startDate, 'endDate'=>$endDate], $allWorkersAttendanceData, 200);
         return $this->responseHelper->api_response($allWorkersAttendanceData, 200, "success", 'Success.');
+        
     }
     
 
@@ -756,14 +794,18 @@ class TimeSheetServices
         }])
         ->where('timesheet_id', $timesheetid)
         ->get();
+        $this->responseHelper->logAction('getSummaryData', ['timesheet_id'=>$timesheetid], $workers, 200);
         return $this->responseHelper->api_response($workers, 200, "success", 'success.');
+       
     }
     
     public function getTotalWorkerData($timesheetid)
     {
         // Retrieve count of all workers 
         $workers = LocalWorker::where('timesheet_id',$timesheetid)->count();
+        $this->responseHelper->logAction('getTotalWorkerData', ['timesheet_id'=>$timesheetid], ['total_workers'=>$workers], 200);
         return $this->responseHelper->api_response(['total_workers'=>$workers], 200, "success", 'success.');
+       
     }
     public function addLocalWorkerCsv($request)
     {
@@ -868,8 +910,9 @@ public function getDailyWeeklyWorkerTotalHrs($workerId, $timesheetId, $month, $y
         'weekly_working_hours' => $weeklyWorkingHours,
         'approve_status' => $approveStatus,
     ];
-    
+    $this->responseHelper->logAction('getDailyWeeklyWorkerTotalHrs', ['workerId'=>$workerId,'timesheet_id'=>$timesheetId,'month'=>$month, 'year'=>$year], $data, 200);
     return $this->responseHelper->api_response($data, 200, "success", 'success.');
+   
 }
 
 /*
@@ -972,6 +1015,7 @@ public function updateAssignTaskCheckbox($request){
             $timeSheet->assign_task = '1';
         }
         $timeSheet->save();
+        $this->responseHelper->logAction('updateAssignTaskCheckbox', $request, $timeSheet, 200);
         return $this->responseHelper->api_response($timeSheet, 200, "success", 'success.');
     }else{
         return $this->responseHelper->api_response(null, 422, "error", "something went wrong.");
@@ -1004,7 +1048,9 @@ public function makeUniversalWorker($request){
     $UniversalWorker->worker_qr = $this->responseHelper->GenerateWorkerQR($request,$fullCode);
     $UniversalWorker->save();
     if ($UniversalWorker) {
+        $this->responseHelper->logAction('makeUniversalWorker', $request, $UniversalWorker, 200);
         return $this->responseHelper->api_response($UniversalWorker, 200, "success", 'success.');
+       
     } else {
         return $this->responseHelper->api_response(false, 422, "error", "error.");
     }
@@ -1013,7 +1059,7 @@ public function makeUniversalWorker($request){
 }
 
 public function getUniversalWorkers(){
-    $invitedWorkerIds = PendingInvitation::whereIn('status', [0, 1])
+    $invitedWorkerIds = PendingInvitation::whereIn('status', 0)
                         ->pluck('worker_id')
                         ->toArray();
     // Get all universal workers excluding those with pending or accepted invitations
@@ -1028,6 +1074,7 @@ public function getUniversalWorkers(){
 
 public function inviteUniversalWorker($request)
 {
+  
     // Retrieve the universal worker based on the provided worker_id from the request
     $universalWorker = UniversalWorker::where('worker_id', $request['worker_id'])->first();
 
@@ -1043,7 +1090,10 @@ public function inviteUniversalWorker($request)
         $invitedWorker->save();
 
         // Return a success response with the created invitation data
+        $this->responseHelper->logAction('inviteUniversalWorker', $request, $invitedWorker, 200);
         return $this->responseHelper->api_response($invitedWorker, 200, "success", 'Invitation sent successfully.');
+       
+        
     } else {
         // Return an error response if the universal worker does not exist
         return $this->responseHelper->api_response(false, 422, "error", "Universal worker does not exist");
@@ -1074,7 +1124,9 @@ public function acceptRejectInvitation($request)
             // Retrieve the updated invitation data
             $invitedWorker1 = PendingInvitation::where('worker_id', $request['worker_id'])->first();
             // Return a success response with the updated invitation data
+            $this->responseHelper->logAction('acceptRejectInvitation', $request, $invitedWorker1, 200);
             return $this->responseHelper->api_response($invitedWorker1, 200, "success", 'Invitation accepted.');
+            
         }
 
         // Check if the status is set to '2' (rejected)
@@ -1085,6 +1137,7 @@ public function acceptRejectInvitation($request)
             // Retrieve the updated invitation data
             $invitedWorker1 = PendingInvitation::where('worker_id', $request['worker_id'])->first();
             // Return a success response with the updated invitation data
+            $this->responseHelper->logAction('acceptRejectInvitation', $request, $invitedWorker1, 200);
             return $this->responseHelper->api_response($invitedWorker1, 200, "success", 'Invitation rejected.');
         }
     } else {

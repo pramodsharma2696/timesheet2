@@ -2,8 +2,10 @@
 
 namespace App\Helpers;
 
-use League\ISO3166\ISO3166;
+use App\Models\ApiLogs;
 use App\Classes\SimpleQR;
+use League\ISO3166\ISO3166;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 
@@ -37,6 +39,19 @@ class ResponseHelper {
             }
 
             return true;
+    }
+    public function logAction($action, $requestData, $responseData, $statusCode)
+    {
+      
+        $user = Auth::user();
+        ApiLogs::create([
+            'user_id' => $user ? $user->id : null,
+            'username' => $user ? $user->name : null,
+            'action' => $action,
+            'request_data' => json_encode($requestData),
+            'response_data' => json_encode($responseData),
+            'status_code' => $statusCode,
+        ]);
     }
 
     public function GenerateQR($projectData){
