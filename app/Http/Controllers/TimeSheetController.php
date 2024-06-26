@@ -288,6 +288,14 @@ class TimeSheetController extends Controller
         }
     }
 
+    public function PendingInviteWorker($timesheetid){
+        try {
+            $this->timeSheetServices->pendingInviteWorker($timesheetid);
+        }catch(\Exception $e){
+            return $this->responseHelper->api_response(null, 422,"error", $e->getMessage());
+        }
+    }
+
     
     
 }

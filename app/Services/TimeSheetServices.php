@@ -1094,7 +1094,14 @@ public function acceptRejectInvitation($request)
 }
 
  
-    
+public function pendingInviteWorker($timesheetid){
+    $invitedWorkers = PendingInvitation::where('timesheet_id', $timesheetid)->where('status', '0')->get();
+    if ($invitedWorkers) {
+        return $this->responseHelper->api_response($invitedWorkers, 200, "success", 'success.');
+    } else {
+        return $this->responseHelper->api_response(false, 422, "error", "error.");
+    }
+}    
 
     
 }

@@ -74,6 +74,7 @@ Route::group(
                 Route::get('/get-all-universal-worker',[TimeSheetController::class, 'getUniversalWorkers']); 
                 Route::post('/invite-universal-worker',[TimeSheetController::class, 'InviteUniversalWorker']); 
                 Route::post('/accept-reject-invitation',[TimeSheetController::class, 'AcceptRejectInvitation']); 
+                Route::get('/pending-invites-worker/{timesheetid}',[TimeSheetController::class, 'PendingInviteWorker']); 
             });
     }
 );
