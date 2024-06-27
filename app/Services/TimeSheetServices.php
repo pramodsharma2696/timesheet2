@@ -1059,18 +1059,21 @@ public function makeUniversalWorker($request){
 }
 
 public function getUniversalWorkers(){
-    $invitedWorkerIds = PendingInvitation::whereIn('status', 0)
+    // Fetching worker IDs with pending invitations
+    $invitedWorkerIds = PendingInvitation::where('status', '0')
                         ->pluck('worker_id')
                         ->toArray();
+    
     // Get all universal workers excluding those with pending or accepted invitations
     $universalWorkers = UniversalWorker::whereNotIn('worker_id', $invitedWorkerIds)->get();
-    if ($universalWorkers) {
+    
+    if ($universalWorkers->isNotEmpty()) {
         return $this->responseHelper->api_response($universalWorkers, 200, "success", 'success.');
     } else {
-        return $this->responseHelper->api_response(false, 422, "error", "error.");
+        return $this->responseHelper->api_response(false, 422, "error", "No universal workers found.");
     }
-
 }
+
 
 public function inviteUniversalWorker($request)
 {
