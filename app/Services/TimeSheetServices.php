@@ -218,7 +218,6 @@ class TimeSheetServices
     {
         $timesheetCount = TimeSheet::count();
         $newTimeSheetId = $timesheetCount + 1;
-        $this->responseHelper->logAction('generateTimeSheetId', null, ['timesheetId' => $newTimeSheetId], 200);
         return $this->responseHelper->api_response(['timesheetId' => $newTimeSheetId], 200, "success", 'Time sheet ID generated successfully.');
         
     }
@@ -248,10 +247,7 @@ class TimeSheetServices
                     TimeSheet::where('project_id', $projectData->id)->update(['timesheet_qr' => $original_dir_path]);
                 }
             }
-            $this->responseHelper->logAction('generateQR', ['projectId' => $projectId], $original_dir_path, 200);
             return $original_dir_path;
-            
-            
         } else {
             return null;
         }
@@ -269,7 +265,6 @@ class TimeSheetServices
 
             $original_dir_path = $this->responseHelper->GenerateRefreshQR($projectData); // Generate new QR code
             TimeSheet::where('project_id', $projectData->id)->update(['timesheet_qr' => $original_dir_path]);
-            $this->responseHelper->logAction('refreshQR', ['projectId' => $projectId], $original_dir_path, 200);
             return $this->responseHelper->api_response(['timesheet_qr' => $original_dir_path], 200, "success", 'Timesheet QR is regenerated.');
            
         } else {
@@ -346,7 +341,6 @@ class TimeSheetServices
     {
         $worker = LocalWorker::where('timesheet_id', $timesheetId)->get();
         if (!empty($worker)) {
-            $this->responseHelper->logAction('getTimesheetIdBasedWorker', ['timesheetId' => $timesheetId], $worker, 200);
             return $this->responseHelper->api_response($worker, 200, "success", 'success.');
             
         } else {
@@ -371,7 +365,6 @@ class TimeSheetServices
                 $worker->attendance = null;
             }
         }
-        $this->responseHelper->logAction('getTimesheetIdAndDateBasedWorker', ['timesheetId' => $timesheetid, 'date'=>$date], $workers, 200);
         return $this->responseHelper->api_response($workers, 200, "success", 'success.');
        
     }
@@ -778,7 +771,6 @@ class TimeSheetServices
         }
     
         // Return the response without wrapping in an additional key
-        $this->responseHelper->logAction('getInOutAttendanceData', ['timesheet_id'=>$timesheet_id,'startDate'=>$startDate, 'endDate'=>$endDate], $allWorkersAttendanceData, 200);
         return $this->responseHelper->api_response($allWorkersAttendanceData, 200, "success", 'Success.');
         
     }
@@ -796,7 +788,6 @@ class TimeSheetServices
         }])
         ->where('timesheet_id', $timesheetid)
         ->get();
-        $this->responseHelper->logAction('getSummaryData', ['timesheet_id'=>$timesheetid], $workers, 200);
         return $this->responseHelper->api_response($workers, 200, "success", 'success.');
        
     }
@@ -805,7 +796,6 @@ class TimeSheetServices
     {
         // Retrieve count of all workers 
         $workers = LocalWorker::where('timesheet_id',$timesheetid)->count();
-        $this->responseHelper->logAction('getTotalWorkerData', ['timesheet_id'=>$timesheetid], ['total_workers'=>$workers], 200);
         return $this->responseHelper->api_response(['total_workers'=>$workers], 200, "success", 'success.');
        
     }
@@ -912,7 +902,6 @@ public function getDailyWeeklyWorkerTotalHrs($workerId, $timesheetId, $month, $y
         'weekly_working_hours' => $weeklyWorkingHours,
         'approve_status' => $approveStatus,
     ];
-    $this->responseHelper->logAction('getDailyWeeklyWorkerTotalHrs', ['workerId'=>$workerId,'timesheet_id'=>$timesheetId,'month'=>$month, 'year'=>$year], $data, 200);
     return $this->responseHelper->api_response($data, 200, "success", 'success.');
    
 }
