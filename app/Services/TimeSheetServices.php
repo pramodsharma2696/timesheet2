@@ -534,7 +534,11 @@ class TimeSheetServices
         if (!empty($Attendance)) {
             Attendance::where('id', $request['attendance_id'])->update(['approve'=>$request['approve']]);
             $UpdatedAttendace = Attendance::findOrFail($request['attendance_id']);
-            $this->responseHelper->logAction('approveAttendance', $request, $UpdatedAttendace, 200);
+            if($request['approve'] === '1'){
+                $this->responseHelper->logAction('approveAttendance', $request, $UpdatedAttendace, 200);
+            }else{
+                $this->responseHelper->logAction('RejectAttendance', $request, $UpdatedAttendace, 200);
+            }
             return $this->responseHelper->api_response($UpdatedAttendace, 200, "success", 'success.');
            
         } else {
@@ -1150,7 +1154,19 @@ public function pendingInviteWorker($timesheetid){
     } else {
         return $this->responseHelper->api_response(false, 422, "error", "error.");
     }
-}    
+} 
+    public function deletePendingInvite($id)
+    {
+        $invitedWorkers = PendingInvitation::where('id', $id)->first();
+        if (!empty($invitedWorkers)) {
+            $invitedWorkers->delete();
+            $this->responseHelper->logAction('deletePendingInvite', ['id' => $id], $invitedWorkers, 200);
+            return $this->responseHelper->api_response(null, 200, "success", 'Pending Invite deleted.');
+           
+        } else {
+            return $this->responseHelper->api_response(null, 422, "error", "This Pending Invite does not exist.");
+        }
+    }
 
     
 }

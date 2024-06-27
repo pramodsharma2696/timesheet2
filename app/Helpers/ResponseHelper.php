@@ -143,7 +143,7 @@ class ResponseHelper {
     }
 
 
-    function generateAlphanumericString($length = 7) {
+    function generateAlphanumericString($length = 5) {
         $characters = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
         $charactersLength = strlen($characters);
         $randomString = '';

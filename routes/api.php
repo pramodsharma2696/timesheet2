@@ -75,6 +75,7 @@ Route::group(
                 Route::post('/invite-universal-worker',[TimeSheetController::class, 'InviteUniversalWorker']); 
                 Route::post('/accept-reject-invitation',[TimeSheetController::class, 'AcceptRejectInvitation']); 
                 Route::get('/pending-invites-worker/{timesheetid}',[TimeSheetController::class, 'PendingInviteWorker']); 
+                Route::delete('/delete-pending-invite/{id}',[TimeSheetController::class, 'DeletePendingInvite']); 
             });
     }
 );
