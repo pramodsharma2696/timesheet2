@@ -264,9 +264,9 @@ class TimeSheetController extends Controller
         }
     }
 
-    public function getUniversalWorkers(){
+    public function getUniversalWorkers($timesheet_id){
         try {
-            $this->timeSheetServices->getUniversalWorkers();
+            $this->timeSheetServices->getUniversalWorkers($timesheet_id);
         }catch(\Exception $e){
             return $this->responseHelper->api_response(null, 422,"error", $e->getMessage());
         }

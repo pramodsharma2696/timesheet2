@@ -71,7 +71,7 @@ Route::group(
                 Route::post('/assign-task-add',[TimeSheetController::class, 'assignTaskAdd']); 
                 Route::post('/update-assign-task-checkbox',[TimeSheetController::class, 'updateAssignTaskCheckbox']); 
                 Route::post('/make-universal-worker',[TimeSheetController::class, 'MakeUniversalWorker']); 
-                Route::get('/get-all-universal-worker',[TimeSheetController::class, 'getUniversalWorkers']); 
+                Route::get('/get-all-universal-worker/{timesheet_id}',[TimeSheetController::class, 'getUniversalWorkers']); 
                 Route::post('/invite-universal-worker',[TimeSheetController::class, 'InviteUniversalWorker']); 
                 Route::post('/accept-reject-invitation',[TimeSheetController::class, 'AcceptRejectInvitation']); 
                 Route::get('/pending-invites-worker/{timesheetid}',[TimeSheetController::class, 'PendingInviteWorker']); 

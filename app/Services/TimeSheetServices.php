@@ -1058,9 +1058,11 @@ public function makeUniversalWorker($request){
 
 }
 
-public function getUniversalWorkers(){
+public function getUniversalWorkers($timesheet_id){
     // Fetching worker IDs with pending invitations
-    $invitedWorkerIds = PendingInvitation::where('status', '0')
+    
+    $invitedWorkerIds = PendingInvitation::where('timesheet_id', $timesheet_id)
+                        ->whereIn('status', ['0','1'])
                         ->pluck('worker_id')
                         ->toArray();
     
