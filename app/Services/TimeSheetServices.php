@@ -1118,7 +1118,7 @@ public function acceptRejectInvitation($request)
         // Check if the status is set to '1' (accepted)
         if (isset($request['status']) && $request['status'] === '1') {
             // Update the status to '1' (accepted)
-            PendingInvitation::where('worker_id', $request['worker_id'])->update(['status' => '1']);
+            PendingInvitation::where('worker_id', $request['worker_id'])->where('timesheet_id', $request['timesheet_id'])->update(['status' => '1']);
 
             // Create a new LocalWorker instance and save the accepted worker's details
             $createLocalWorker = new LocalWorker();
@@ -1129,7 +1129,7 @@ public function acceptRejectInvitation($request)
             $createLocalWorker->save();
 
             // Retrieve the updated invitation data
-            $invitedWorker1 = PendingInvitation::where('worker_id', $request['worker_id'])->first();
+            $invitedWorker1 = PendingInvitation::where('worker_id', $request['worker_id'])->where('timesheet_id', $request['timesheet_id'])->first();
             // Return a success response with the updated invitation data
             $this->responseHelper->logAction('acceptRejectInvitation', $request, $invitedWorker1, 200);
             return $this->responseHelper->api_response($invitedWorker1, 200, "success", 'Invitation accepted.');
@@ -1139,10 +1139,10 @@ public function acceptRejectInvitation($request)
         // Check if the status is set to '2' (rejected)
         if (isset($request['status']) && $request['status'] === '2') {
             // Update the status to '2' (rejected)
-            PendingInvitation::where('worker_id', $request['worker_id'])->update(['status' => '2']);
+            PendingInvitation::where('worker_id', $request['worker_id'])->where('timesheet_id', $request['timesheet_id'])->update(['status' => '2']);
 
             // Retrieve the updated invitation data
-            $invitedWorker1 = PendingInvitation::where('worker_id', $request['worker_id'])->first();
+            $invitedWorker1 = PendingInvitation::where('worker_id', $request['worker_id'])->where('timesheet_id', $request['timesheet_id'])->first();
             // Return a success response with the updated invitation data
             $this->responseHelper->logAction('acceptRejectInvitation', $request, $invitedWorker1, 200);
             return $this->responseHelper->api_response($invitedWorker1, 200, "success", 'Invitation rejected.');
