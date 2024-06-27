@@ -64,6 +64,7 @@ return [
     ],
     'accept_reject_invitation' => [
         'status' => 'required',
-        'worker_id' => 'required'
+        'worker_id' => 'required',
+        'timesheet_id' => 'required'
     ],
 ];

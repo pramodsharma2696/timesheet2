@@ -501,6 +501,9 @@ class TimeSheetServices
     if (!empty($request['attendance_id'])) {
         // Update existing attendance record
         $attendance = Attendance::find($request['attendance_id']);
+        if($attendance->approve === '0'){
+            $this->responseHelper->logAction('recordAttendance-resubmitted', $request, $attendance, 200);
+         }
 
         if (!$attendance) {
             return $this->responseHelper->api_response(null, 422, "error", "Attendance record does not exist.");
@@ -513,7 +516,6 @@ class TimeSheetServices
         }
         $attendance->save();
         $attendanceData = Attendance::find($request['attendance_id']);
-        $this->responseHelper->logAction('recordAttendance', $request, $attendanceData, 200);
         return $this->responseHelper->api_response($attendanceData, 200, "success", 'Attendance updated.');
         
     } else {
@@ -1109,7 +1111,7 @@ public function inviteUniversalWorker($request)
 public function acceptRejectInvitation($request)
 {
     // Retrieve the pending invitation based on the provided worker_id from the request
-    $invitedWorker = PendingInvitation::where('worker_id', $request['worker_id'])->first();
+    $invitedWorker = PendingInvitation::where('worker_id', $request['worker_id'])->where('timesheet_id', $request['timesheet_id'])->first();
 
     // Check if the invitation exists
     if (!empty($invitedWorker)) {
