@@ -803,6 +803,7 @@ class TimeSheetServices
         return $this->responseHelper->api_response(['total_workers'=>$workers], 200, "success", 'success.');
        
     }
+
     public function addLocalWorkerCsv($request)
     {
         // Get the uploaded CSV file
@@ -810,21 +811,43 @@ class TimeSheetServices
         // Read the CSV file
         $csv = Reader::createFromPath($file->getPathname(), 'r');
         $csv->setHeaderOffset(0); // Skip the header row
-        // Iterate over each row in the CSV file
-        foreach ($csv as $record) {
-                // Create a new LocalWorker instance and save it to the database
-                $existingCount = LocalWorker::count();
-                $createLocalWorker = new LocalWorker();
+
+        // Store records temporarily
+        $records = iterator_to_array($csv);
+
+        // Check for existing worker IDs
+        foreach ($records as $record) {
+            if (!empty($record['workerid']) && LocalWorker::where('worker_id', $record['workerid'])->exists()) {
+                return $this->responseHelper->api_response(null, 400, "error", 'Worker ID ' . $record['workerid'] . ' already exists.');
+            }
+        }
+
+        // Get the current count of LocalWorker instances to generate unique IDs
+        $existingCount = LocalWorker::count();
+
+        // Process and save the records
+        foreach ($records as $record) {
+            // Create a new LocalWorker instance and save it to the database
+            $createLocalWorker = new LocalWorker();
+
+            // If workerid is present in the record, use it; otherwise, generate a new one
+            if (!empty($record['workerid'])) {
+                $createLocalWorker->worker_id = $record['workerid'];
+            } else {
                 $existingCount++;
                 $formattedId = 'L-' . $existingCount;
                 $createLocalWorker->worker_id = $formattedId;
-                $createLocalWorker->timesheet_id = $request['timesheet_id'];
-                $createLocalWorker->first_name = $record['firstname'];
-                $createLocalWorker->last_name = $record['lastname'];
-                $createLocalWorker->save();  
+            }
+
+            $createLocalWorker->timesheet_id = $request['timesheet_id'];
+            $createLocalWorker->first_name = $record['firstname'];
+            $createLocalWorker->last_name = $record['lastname'];
+            $createLocalWorker->save();
         }
+
         return $this->responseHelper->api_response(null, 200, "success", 'Local Workers added successfully.');
     }
+
 
 public function getDailyWeeklyWorkerTotalHrs($workerId, $timesheetId, $month, $year){
     // Retrieve the attendance records for the specified worker, timesheet, month, and year
