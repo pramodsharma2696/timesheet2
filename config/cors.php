@@ -19,8 +19,8 @@ return [
     'allowed_origins' => ['https://rapisurv2-k6dl.vercel.app','https://qa-timesheet.rapisurv.com'],
     'allowed_origins_patterns' => [],
     'allowed_headers' => ['*'],
-    'exposed_headers' => false,
-    'max_age' => false,
+    'exposed_headers' => [],
+    'max_age' => 0,
     'supports_credentials' => false,
 
 ];

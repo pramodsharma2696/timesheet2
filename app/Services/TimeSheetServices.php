@@ -803,7 +803,6 @@ class TimeSheetServices
         return $this->responseHelper->api_response(['total_workers'=>$workers], 200, "success", 'success.');
        
     }
-
     public function addLocalWorkerCsv($request)
     {
         // Get the uploaded CSV file
@@ -847,7 +846,6 @@ class TimeSheetServices
 
         return $this->responseHelper->api_response(null, 200, "success", 'Local Workers added successfully.');
     }
-
 
 public function getDailyWeeklyWorkerTotalHrs($workerId, $timesheetId, $month, $year){
     // Retrieve the attendance records for the specified worker, timesheet, month, and year
@@ -932,40 +930,6 @@ public function getDailyWeeklyWorkerTotalHrs($workerId, $timesheetId, $month, $y
     return $this->responseHelper->api_response($data, 200, "success", 'success.');
    
 }
-
-/*
-public function assignTaskAdd($request){
-    //dd($request);
-    $timesheet = TimeSheet::where('timesheet_id', $request['timesheet_id'])->first();
-    $formattedDate = Carbon::createFromFormat('d-m-Y', $request['date'])->format('Y-m-d');
-    $attendances = Attendance::where('worker_id', $request['worker_id'])
-                    ->where('timesheet_id', $request['timesheet_id'])
-                    ->whereDate('date',$formattedDate)
-                    ->first();
-    if(!empty($attendances)){
-        if($timesheet->hours === '0'){
-            $attendances->total_hours = $request['total_hours'];
-            $attendances->save();
-            return $this->responseHelper->api_response($attendances, 200, "success", 'success.');
-        }else{
-            return $this->responseHelper->api_response(null, 422, "error", "Calculate Hours is set True, Hence can not be updated.");
-        }
-    }else{
-        if($timesheet->hours === '0'){
-            $attendance = new Attendance();
-            $attendance->user_id = auth()->user()->id;
-            $attendance->worker_id = $request['worker_id'];
-            $attendance->timesheet_id = $request['timesheet_id'];
-            $attendance->date = $formattedDate;
-            $attendance->total_hours = $request['total_hours'];
-            $attendance->save();
-            return $this->responseHelper->api_response($attendance, 200, "success", 'success.');
-        }        
-        return $this->responseHelper->api_response(null, 422, "error", "Calculate Hours is set True, Hence can not be added.");
-    }
-}
-
-*/
 
     public function assignTaskAdd($request)
     {
