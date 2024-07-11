@@ -607,9 +607,6 @@ class TimeSheetServices
             if (!is_null($attendance->total_hours)) {
                 $totalHours = $attendance->total_hours;
             }
-            if (!is_null($attendance->break_totals)) {
-                $breakTotal = $attendance->break_totals;
-            }
         }
         $assignTaskHoursJson = json_encode($request['assign_task_hours']);
         // Convert the assign_task_hours array to JSON and calculate total hours
@@ -876,23 +873,23 @@ public function getDailyWeeklyWorkerTotalHrs($workerId, $timesheetId, $month, $y
         foreach ($attendances as $attendance) {
             if (Carbon::parse($attendance->date)->toDateString() === $dateString) {
                 // Decode the JSON data from the attendance column
-                $attendanceData = json_decode($attendance->attendance, true);
+                // $attendanceData = json_decode($attendance->attendance, true);
                 
                 // Initialize total working hours for the current date
-                $totalWorkingHours = 0;
+                $totalWorkingHours = $attendance->total_hours;
                 
                 // Iterate through each in/out record and calculate total working hours
-                foreach ($attendanceData as $record) {
-                    // Assuming the JSON structure contains 'in_time' and 'out_time'
-                    $inTime = Carbon::parse($record['in_time']);
-                    $outTime = Carbon::parse($record['out_time']);
+                // foreach ($attendanceData as $record) {
+                //     // Assuming the JSON structure contains 'in_time' and 'out_time'
+                //     $inTime = Carbon::parse($record['in_time']);
+                //     $outTime = Carbon::parse($record['out_time']);
                     
-                    // Calculate working hours for the current record
-                    $workingHours = $outTime->diffInHours($inTime);
+                //     // Calculate working hours for the current record
+                //     $workingHours = $outTime->diffInHours($inTime);
                     
-                    // Add working hours to the total
-                    $totalWorkingHours += $workingHours;
-                }
+                //     // Add working hours to the total
+                //     $totalWorkingHours += $workingHours;
+                // }
                 
                 // Set total working hours for the current date
                 $dailyWorkingHours[$dateString] = $totalWorkingHours;
